@@ -13,7 +13,7 @@ _Ce sont des recommandations pour garder une construction ordonnée, pas des obl
 |---|---------|-------|--------|
 | 1 | Stack & architecture | Foundation | done |
 | 2 | Coding standards & tooling | Foundation | done |
-| 3 | Client API & erreurs | Foundation | planned |
+| 3 | Client API & erreurs | Foundation | in-progress |
 | 4 | Design system & UI foundation | Foundation | planned |
 | 5 | Connexion admin et liste des séries | Slice 1 | planned |
 | 6 | Fiche série | Slice 2 | planned |
@@ -40,10 +40,18 @@ Noter les conventions à partir du vrai projet, puis installer lint, formatage e
 - [x] Install the tooling: `/develop tooling`
 code in `eslint.config.js`, `.prettierrc.json`, `.husky/`, `.github/workflows/ci.yml`
 
-### 3. Client API & erreurs · needs a decision
+### 3. Client API & erreurs · in-progress
 Une seule façon d'appeler l'API pour tout le dashboard : client typé à partir de `openapi.json` ou écrit à la main, adresse de l'API par environnement, et traduction des erreurs en messages clairs.
 **Done when:** chaque appel passe par ce client ; un `401` renouvelle le token une fois puis renvoie à la connexion ; `403`, `409`, `413`, `415`, `429` et `503` s'affichent en français compréhensible.
-- [ ] Design it (spec): `/architect client API & erreurs`
+- [x] Design it (spec): `/architect client API & erreurs`
+- [ ] Build it: `/develop client API & erreurs`
+   - [ ] Client de base : configuration, `apiRequest`, `ApiError`, vérification Zod, table des messages (AC-1, AC-2, AC-10, AC-11, AC-14, AC-15)
+   - [ ] Session : login, logout, renouvellement partagé, fin de session, `403`, reprise au démarrage (AC-3 à AC-7)
+   - [ ] Onglets et réveil de l'API : partage entre onglets, délais, notification de lenteur (AC-8, AC-9)
+   - [ ] Intégration UI : règles de réessai, `ErrorState`, `notifyError`, `applyFieldErrors` (AC-12, AC-13)
+- [ ] Verify it: `/check verify client API & erreurs`
+- [ ] Test it: `/test client API & erreurs`
+Spec [0002](../specs/0002-client-api-erreurs/index.md)
 
 ### 4. Design system & UI foundation · needs a decision
 Langage visuel, mise en page (menu latéral, en tête, contenu) et composants de base : tableau paginé, formulaire, boîte de confirmation, notification courte.
