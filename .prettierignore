@@ -1,0 +1,8 @@
+dist
+coverage
+node_modules
+package-lock.json
+.agents
+.claude
+# Les Markdown (scope, specs, AGENTS.md) sont édités par les skills du workflow : Prettier n'y touche pas.
+*.md
