@@ -1,0 +1,37 @@
+# Blueprint Render du dashboard (site statique). Voir la spec 0001, section « Hébergement sur Render ».
+# À FAIRE avant le premier déploiement : remplacer https://REMPLACER-PAR-URL-API.onrender.com
+# par l'adresse réelle de l'API de production (dans la CSP ci dessous), et renseigner
+# VITE_API_BASE_URL dans le tableau de bord Render avec la même adresse.
+services:
+  - type: web
+    name: noli-dashboard
+    runtime: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Figée au moment du build : la changer demande un nouveau déploiement.
+      - key: VITE_API_BASE_URL
+        sync: false
+    routes:
+      # SPA : toutes les URL servent index.html, le routeur du navigateur prend le relais.
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://res.cloudinary.com blob: data:; connect-src 'self' https://REMPLACER-PAR-URL-API.onrender.com; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Robots-Tag
+        value: noindex

@@ -1,0 +1,27 @@
+# Dépendances et build
+node_modules/
+dist/
+dist-ssr/
+coverage/
+
+# Secrets et configuration locale
+.env
+.env.*
+!.env.example
+*.local
+
+# Copies locales des Agent Skills pour Claude Code (la source est .agents/skills/ + skills-lock.json)
+.claude/skills/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Éditeurs et système
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.sw?
