@@ -1,15 +1,34 @@
 import '@mantine/core/styles.css'
+import '@mantine/notifications/styles.css'
 
 import { MantineProvider } from '@mantine/core'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useState, type ReactNode } from 'react'
+import { Notifications } from '@mantine/notifications'
+import { QueryClientProvider, type QueryClient } from '@tanstack/react-query'
+import type { ReactNode } from 'react'
+import { SlowServerNotice } from '@/shared/ui/SlowServerNotice'
 
-export function AppProviders({ children }: { children: ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient())
-
+/** Thème Mantine et notifications : suffisent pour l'écran de configuration invalide. */
+export function ThemeProviders({ children }: { readonly children: ReactNode }) {
   return (
     <MantineProvider>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <Notifications position="top-right" />
+      {children}
     </MantineProvider>
+  )
+}
+
+interface AppProvidersProps {
+  readonly queryClient: QueryClient
+  readonly children: ReactNode
+}
+
+export function AppProviders({ queryClient, children }: AppProvidersProps) {
+  return (
+    <ThemeProviders>
+      <QueryClientProvider client={queryClient}>
+        <SlowServerNotice />
+        {children}
+      </QueryClientProvider>
+    </ThemeProviders>
   )
 }

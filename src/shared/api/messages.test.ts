@@ -29,7 +29,7 @@ describe('toUserMessage', () => {
     [http(415), 'Format non accepté : JPEG, PNG ou WebP.'],
     [
       http(429),
-      'Trop de demandes : 10 envois d’images toutes les 10 minutes au plus. Réessayez dans quelques minutes.',
+      "Trop de demandes : 10 envois d'images toutes les 10 minutes au plus. Réessayez dans quelques minutes.",
     ],
     [
       http(503, { code: 'PUSH_UNAVAILABLE' }),
@@ -50,14 +50,14 @@ describe('toUserMessage', () => {
       body: { code: 'CATEGORY_IN_USE', seriesCount: 3 },
     })
     expect(toUserMessage(error).message).toBe(
-      'Cette catégorie est encore utilisée par 3 série(s). Retirez la de ces séries d’abord.',
+      "Cette catégorie est encore utilisée par 3 série(s). Retirez la de ces séries d'abord.",
     )
   })
 
   it('a une formulation de secours sans seriesCount', () => {
     const error = http(409, { code: 'CATEGORY_IN_USE', body: { seriesCount: 'beaucoup' } })
     expect(toUserMessage(error).message).toBe(
-      'Cette catégorie est encore utilisée par des séries. Retirez la de ces séries d’abord.',
+      "Cette catégorie est encore utilisée par des séries. Retirez la de ces séries d'abord.",
     )
   })
 

@@ -30,7 +30,7 @@ const STATUS_MESSAGES: Readonly<Record<number, string>> = {
   409: 'Cet élément existe déjà (nom ou titre déjà pris).',
   413: 'Fichier trop lourd : 5 Mo au plus.',
   415: 'Format non accepté : JPEG, PNG ou WebP.',
-  429: 'Trop de demandes : 10 envois d’images toutes les 10 minutes au plus. Réessayez dans quelques minutes.',
+  429: "Trop de demandes : 10 envois d'images toutes les 10 minutes au plus. Réessayez dans quelques minutes.",
   503: 'Service momentanément indisponible.',
 }
 
@@ -50,8 +50,8 @@ function seriesCountOf(body: unknown): number | undefined {
 function categoryInUseMessage(error: ApiError): string {
   const count = seriesCountOf(error.body)
   return count === undefined
-    ? 'Cette catégorie est encore utilisée par des séries. Retirez la de ces séries d’abord.'
-    : `Cette catégorie est encore utilisée par ${String(count)} série(s). Retirez la de ces séries d’abord.`
+    ? "Cette catégorie est encore utilisée par des séries. Retirez la de ces séries d'abord."
+    : `Cette catégorie est encore utilisée par ${String(count)} série(s). Retirez la de ces séries d'abord.`
 }
 
 function httpMessage(error: ApiError): string {
