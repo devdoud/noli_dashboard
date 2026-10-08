@@ -12,7 +12,7 @@ _Ce sont des recommandations pour garder une construction ordonnée, pas des obl
 | # | Feature | Phase | Status |
 |---|---------|-------|--------|
 | 1 | Stack & architecture | Foundation | done |
-| 2 | Coding standards & tooling | Foundation | planned |
+| 2 | Coding standards & tooling | Foundation | done |
 | 3 | Client API & erreurs | Foundation | planned |
 | 4 | Design system & UI foundation | Foundation | planned |
 | 5 | Connexion admin et liste des séries | Slice 1 | planned |
@@ -33,11 +33,12 @@ Choisir le framework web, la bibliothèque d'interface, l'hébergement et la fa�
 - [x] Scaffold from the decision: `/develop stack & architecture`
 Spec [0001](../specs/0001-stack-architecture/index.md) · code in `./` (`src/app/`, config à la racine)
 
-### 2. Coding standards & tooling
+### 2. Coding standards & tooling · done
 Noter les conventions à partir du vrai projet, puis installer lint, formatage et contrôles avant commit.
 **Done when:** le `AGENTS.md` racine décrit la vraie pile, et lint, formatage et contrôles avant commit passent sans erreur.
 - [x] Capture conventions + tooling choices: `/audit`
-- [ ] Install the tooling: `/develop tooling`
+- [x] Install the tooling: `/develop tooling`
+code in `eslint.config.js`, `.prettierrc.json`, `.husky/`, `.github/workflows/ci.yml`
 
 ### 3. Client API & erreurs · needs a decision
 Une seule façon d'appeler l'API pour tout le dashboard : client typé à partir de `openapi.json` ou écrit à la main, adresse de l'API par environnement, et traduction des erreurs en messages clairs.
