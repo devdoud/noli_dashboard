@@ -49,7 +49,7 @@ Une seule façon d'appeler l'API pour tout le dashboard : client typé à partir
    - [x] Session : login, logout, renouvellement partagé, fin de session, `403`, reprise au démarrage (AC-3 à AC-7)
    - [x] Onglets et réveil de l'API : partage entre onglets, délais, notification de lenteur (AC-8, AC-9)
    - [x] Intégration UI : règles de réessai, `ErrorState`, `notifyError`, `applyFieldErrors` (AC-12, AC-13)
-- [ ] Verify it: `/check verify client API & erreurs`
+- [x] Verify it: `/check verify client API & erreurs`
 - [ ] Test it: `/test client API & erreurs`
 Spec [0002](../specs/0002-client-api-erreurs/index.md) · code in `src/shared/` (`api/`, `session/`, `query/`, `ui/`, `config/`)
 
