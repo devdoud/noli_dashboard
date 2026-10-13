@@ -1,0 +1,33 @@
+.skipLink {
+  position: absolute;
+  top: -100px;
+  left: var(--mantine-spacing-xs);
+  z-index: 1000;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-color-body);
+  color: var(--mantine-color-anchor);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.skipLink:focus {
+  top: var(--mantine-spacing-xs);
+}
+
+.main:focus {
+  outline: none;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  color: inherit;
+  text-decoration: none;
+}
+
+.brandLogo {
+  display: block;
+  border-radius: var(--mantine-radius-sm);
+}

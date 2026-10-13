@@ -12,13 +12,13 @@ interface ErrorStateProps {
 export function ErrorState({ error, onRetry, overrides }: ErrorStateProps) {
   const { message, details } = toUserMessage(error, overrides)
   return (
-    <Alert color="red" title="Erreur" variant="light">
+    <Alert color="noliRed" title="Erreur" variant="light">
       <Stack gap="sm">
         <Text size="sm">{message}</Text>
         {details === undefined ? null : <ErrorDetails details={details} />}
         {onRetry === undefined ? null : (
           <Group>
-            <Button variant="light" color="red" size="xs" onClick={onRetry}>
+            <Button variant="light" color="noliRed" size="xs" onClick={onRetry}>
               Réessayer
             </Button>
           </Group>

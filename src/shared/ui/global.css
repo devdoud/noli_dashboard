@@ -50,6 +50,18 @@
   font-display: swap;
 }
 
+/*
+ * Les bordures qui identifient un contrôle (champ, case à cocher, bouton radio) atteignent 3:1 ;
+ * les séparateurs décoratifs (cartes, lignes de tableau, menu) restent discrets.
+ * Un champ en erreur garde sa bordure rouge (sélecteur [data-error] de Mantine, plus spécifique).
+ */
+.mantine-Input-input,
+.mantine-Checkbox-input,
+.mantine-Radio-radio {
+  --input-bd: var(--noli-color-field-border);
+  border-color: var(--input-bd);
+}
+
 /* Anneau de focus : ambre en sombre, ambre foncé en clair (l'ambre 6 n'atteint pas 3:1 sur blanc). */
 .mantine-focus-auto:focus-visible,
 .mantine-focus-always:focus,
