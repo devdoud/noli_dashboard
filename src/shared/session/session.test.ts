@@ -1,4 +1,5 @@
 import { QueryClient } from '@tanstack/react-query'
+import { act, renderHook } from '@testing-library/react'
 import { delay, http, HttpResponse } from 'msw'
 import { z } from 'zod'
 import { apiRequest } from '@/shared/api/client'
@@ -14,6 +15,7 @@ import {
 } from '@/shared/session/session'
 import { getAccessToken, getSessionState, REFRESH_TOKEN_KEY } from '@/shared/session/store'
 import { TAB_CHANNEL_NAME, type TabMessage } from '@/shared/session/tabs'
+import { useSession } from '@/shared/session/useSession'
 import { server } from '@/test/server'
 
 const API = 'http://api.test'
@@ -556,5 +558,95 @@ describe('cas limites relevés en revue', () => {
     await expect(getOk('/items')).resolves.toEqual({ ok: true })
     expect(getSessionState().status).toBe('authenticated')
     vi.restoreAllMocks()
+  })
+})
+
+describe('sécurité et hook de session', () => {
+  it('un onglet non connecté ne partage jamais de token (AC-8, AC-15)', async () => {
+    window.sessionStorage.setItem(REFRESH_TOKEN_KEY, 'perime')
+    server.use(
+      http.post(`${API}/auth/refresh`, () =>
+        HttpResponse.json({ statusCode: 401 }, { status: 401 }),
+      ),
+    )
+    await restoreSession()
+    const { tab, received } = openOtherTab()
+
+    tab.postMessage({ type: 'request' })
+    await flush()
+
+    expect(getSessionState().status).toBe('anonymous')
+    expect(received).toEqual([])
+  })
+
+  it('ignore les messages d’onglet mal formés (AC-8)', async () => {
+    server.use(loginHandler())
+    await login('admin@noli.test', 'secret')
+    const { tab, received } = openOtherTab()
+
+    tab.postMessage({ type: 'logout-tout' })
+    tab.postMessage({ type: 'share' })
+    tab.postMessage('logout')
+    await flush()
+
+    expect(getSessionState().status).toBe('authenticated')
+    expect(received).toEqual([])
+  })
+
+  it('n’accepte pas un partage non sollicité (AC-8)', async () => {
+    server.use(loginHandler())
+    await login('admin@noli.test', 'secret')
+    const { tab } = openOtherTab()
+
+    tab.postMessage({ type: 'share', refreshToken: 'injecte' })
+    await flush()
+
+    expect(window.sessionStorage.getItem(REFRESH_TOKEN_KEY)).toBe('refresh-1')
+  })
+
+  it('n’écrit aucun token dans la console pendant connexion, refresh refusé et fin de session (AC-15)', async () => {
+    const spies = (['log', 'info', 'warn', 'error', 'debug'] as const).map((method) =>
+      vi.spyOn(console, method).mockImplementation(() => undefined),
+    )
+    server.use(
+      loginHandler(),
+      protectedHandler('/items', 'jamais'),
+      http.post(`${API}/auth/refresh`, () =>
+        HttpResponse.json({ statusCode: 401 }, { status: 401 }),
+      ),
+    )
+
+    await login('admin@noli.test', 'secret')
+    await captureError(getOk('/items'))
+
+    const printed = JSON.stringify(spies.map((spy) => spy.mock.calls))
+    expect(printed).not.toContain('access-1')
+    expect(printed).not.toContain('refresh-1')
+    vi.restoreAllMocks()
+  })
+
+  it('ne diffuse rien quand on se déconnecte sans session (AC-4)', async () => {
+    await restoreSession()
+    const { received } = openOtherTab()
+
+    logout()
+    await flush()
+
+    expect(received).toEqual([])
+    expect(getSessionState()).toEqual({ status: 'anonymous' })
+  })
+
+  it('useSession suit l’état de session (AC-6, AC-7)', async () => {
+    server.use(loginHandler())
+    const { result } = renderHook(() => useSession())
+    expect(result.current.status).toBe('restoring')
+
+    await act(() => login('admin@noli.test', 'secret'))
+    expect(result.current).toEqual({ status: 'authenticated', user: adminUser })
+
+    act(() => {
+      logout()
+    })
+    expect(result.current).toEqual({ status: 'anonymous', endReason: 'logout' })
   })
 })

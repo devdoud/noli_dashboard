@@ -227,3 +227,121 @@ describe('apiRequest : délais et lenteur', () => {
     expect(await settled).toMatchObject({ kind: 'timeout' })
   })
 })
+
+describe('apiRequest : en têtes, paramètres et authentification', () => {
+  function fakeHooks(token: string | undefined) {
+    const calls = { refresh: 0, ended: [] as string[] }
+    registerSessionHooks({
+      getAccessToken: () => token,
+      refresh: () => {
+        calls.refresh += 1
+        return Promise.resolve('nouveau')
+      },
+      isAuthenticated: () => true,
+      onSessionEnd: (reason) => {
+        calls.ended.push(reason)
+      },
+      sessionSignal: () => new AbortController().signal,
+    })
+    return calls
+  }
+
+  it('n’envoie pas le token sur un appel non authentifié (AC-1, AC-15)', async () => {
+    fakeHooks('secret-token')
+    const seen: { authorization?: string | null } = {}
+    server.use(
+      http.post(`${API}/auth/login`, ({ request }) => {
+        seen.authorization = request.headers.get('authorization')
+        return HttpResponse.json({ ok: true })
+      }),
+    )
+
+    await apiRequest({
+      method: 'POST',
+      path: '/auth/login',
+      body: {},
+      schema: z.unknown(),
+      auth: false,
+    })
+
+    expect(seen.authorization).toBeNull()
+  })
+
+  it('envoie le token en en tête, jamais dans l’URL (AC-1, AC-15)', async () => {
+    fakeHooks('secret-token')
+    const seen: { authorization?: string | null; url?: string } = {}
+    server.use(
+      http.get(`${API}/series`, ({ request }) => {
+        seen.authorization = request.headers.get('authorization')
+        seen.url = request.url
+        return HttpResponse.json({ ok: true })
+      }),
+    )
+
+    await apiRequest({ method: 'GET', path: '/series', schema: z.unknown() })
+
+    expect(seen.authorization).toBe('Bearer secret-token')
+    expect(seen.url).not.toContain('secret-token')
+  })
+
+  it('encode les caractères spéciaux des paramètres (AC-1)', async () => {
+    const seen: { search?: string } = {}
+    server.use(
+      http.get(`${API}/series/search`, ({ request }) => {
+        seen.search = new URL(request.url).searchParams.get('q') ?? undefined
+        return HttpResponse.json({ ok: true })
+      }),
+    )
+
+    await apiRequest({
+      method: 'GET',
+      path: '/series/search',
+      query: { q: 'drame & amour?=1' },
+      schema: z.unknown(),
+      auth: false,
+    })
+
+    expect(seen.search).toBe('drame & amour?=1')
+  })
+
+  it('ne tente aucun renouvellement sur un 401 non authentifié (AC-3, AC-6)', async () => {
+    const calls = fakeHooks(undefined)
+    server.use(
+      http.post(`${API}/auth/login`, () =>
+        HttpResponse.json({ statusCode: 401, message: 'Invalid credentials' }, { status: 401 }),
+      ),
+    )
+
+    const error = await captureError(
+      apiRequest({
+        method: 'POST',
+        path: '/auth/login',
+        body: {},
+        schema: z.unknown(),
+        auth: false,
+      }),
+    )
+
+    expect(error).toMatchObject({ kind: 'http', status: 401 })
+    expect(calls.refresh).toBe(0)
+    expect(calls.ended).toEqual([])
+  })
+
+  it('met fin à la session sur 403 sans code, mais pas sur un appel non authentifié (AC-5)', async () => {
+    const calls = fakeHooks('t')
+    server.use(
+      http.get(`${API}/admin`, () => HttpResponse.json({ statusCode: 403 }, { status: 403 })),
+    )
+
+    const authenticated = await captureError(
+      apiRequest({ method: 'GET', path: '/admin', schema: z.unknown() }),
+    )
+    const anonymous = await captureError(
+      apiRequest({ method: 'GET', path: '/admin', schema: z.unknown(), auth: false }),
+    )
+
+    expect(authenticated).toMatchObject({ kind: 'session-ended', reason: 'forbidden' })
+    expect(anonymous).toMatchObject({ kind: 'http', status: 403 })
+    expect(calls.ended).toEqual(['forbidden'])
+  })
+})

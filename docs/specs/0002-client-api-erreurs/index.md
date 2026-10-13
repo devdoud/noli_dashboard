@@ -1,7 +1,7 @@
 # 0002. Client API, session et erreurs du dashboard
 
 **Date**: 2026-10-08
-**Status**: In Progress
+**Status**: Accepted
 
 ## Summary
 

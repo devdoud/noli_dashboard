@@ -86,3 +86,30 @@ describe('toUserMessage', () => {
     })
   })
 })
+
+describe('toUserMessage, cas limites (AC-10, AC-15)', () => {
+  it('ne donne de détail que pour une erreur http', () => {
+    expect(toUserMessage(new ApiError({ kind: 'network', backendMessage: 'boom' }))).toEqual({
+      message: 'Impossible de joindre le serveur. Vérifiez votre connexion, puis réessayez.',
+    })
+  })
+
+  it('ignore un texte backend vide ou fait d’espaces', () => {
+    expect(toUserMessage(http(400, { backendMessage: '   ' }))).toEqual({
+      message: 'Certaines informations sont invalides.',
+    })
+  })
+
+  it('garde un message 403 de session finie distinct du 403 ordinaire', () => {
+    expect(
+      toUserMessage(new ApiError({ kind: 'session-ended', reason: 'forbidden' })).message,
+    ).not.toBe(toUserMessage(http(403)).message)
+  })
+
+  it('applique un remplacement par statut sans toucher aux autres statuts', () => {
+    const overrides = { '404': 'Série introuvable.' }
+    expect(toUserMessage(http(409), overrides).message).toBe(
+      'Cet élément existe déjà (nom ou titre déjà pris).',
+    )
+  })
+})

@@ -13,7 +13,7 @@ _Ce sont des recommandations pour garder une construction ordonnée, pas des obl
 |---|---------|-------|--------|
 | 1 | Stack & architecture | Foundation | done |
 | 2 | Coding standards & tooling | Foundation | done |
-| 3 | Client API & erreurs | Foundation | in-progress |
+| 3 | Client API & erreurs | Foundation | done |
 | 4 | Design system & UI foundation | Foundation | planned |
 | 5 | Connexion admin et liste des séries | Slice 1 | planned |
 | 6 | Fiche série | Slice 2 | planned |
@@ -40,7 +40,7 @@ Noter les conventions à partir du vrai projet, puis installer lint, formatage e
 - [x] Install the tooling: `/develop tooling`
 code in `eslint.config.js`, `.prettierrc.json`, `.husky/`, `.github/workflows/ci.yml`
 
-### 3. Client API & erreurs · in-progress
+### 3. Client API & erreurs · done
 Une seule façon d'appeler l'API pour tout le dashboard : client typé à partir de `openapi.json` ou écrit à la main, adresse de l'API par environnement, et traduction des erreurs en messages clairs.
 **Done when:** chaque appel passe par ce client ; un `401` renouvelle le token une fois puis renvoie à la connexion ; `403`, `409`, `413`, `415`, `429` et `503` s'affichent en français compréhensible.
 - [x] Design it (spec): `/architect client API & erreurs`
@@ -50,7 +50,7 @@ Une seule façon d'appeler l'API pour tout le dashboard : client typé à partir
    - [x] Onglets et réveil de l'API : partage entre onglets, délais, notification de lenteur (AC-8, AC-9)
    - [x] Intégration UI : règles de réessai, `ErrorState`, `notifyError`, `applyFieldErrors` (AC-12, AC-13)
 - [x] Verify it: `/check verify client API & erreurs`
-- [ ] Test it: `/test client API & erreurs`
+- [x] Test it: `/test client API & erreurs`
 Spec [0002](../specs/0002-client-api-erreurs/index.md) · code in `src/shared/` (`api/`, `session/`, `query/`, `ui/`, `config/`)
 
 ### 4. Design system & UI foundation · needs a decision

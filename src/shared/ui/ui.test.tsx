@@ -17,6 +17,11 @@ import { renderWithProviders } from '@/test/render'
 afterEach(() => {
   vi.restoreAllMocks()
   vi.useRealTimers()
+  // Le store des notifications Mantine est global : le vider pour isoler chaque test.
+  act(() => {
+    notifications.clean()
+    notifications.cleanQueue()
+  })
 })
 
 function fakeForm() {
@@ -145,5 +150,117 @@ describe('ConfigErrorScreen', () => {
     )
     expect(screen.getByRole('heading', { name: 'Configuration invalide' })).toBeInTheDocument()
     expect(screen.getByText('VITE_API_BASE_URL')).toBeInTheDocument()
+  })
+})
+
+describe('ErrorState, cas limites (AC-13)', () => {
+  it('s’annonce comme une alerte, sans bouton ni détail quand rien n’est fourni', () => {
+    renderWithProviders(<ErrorState error={new ApiError({ kind: 'network' })} />)
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Impossible de joindre le serveur. Vérifiez votre connexion, puis réessayez.',
+    )
+    expect(screen.queryByRole('button', { name: 'Réessayer' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Détails')).not.toBeInTheDocument()
+  })
+
+  it('le bouton Réessayer est atteignable au clavier', async () => {
+    const onRetry = vi.fn()
+    const user = userEvent.setup()
+    renderWithProviders(<ErrorState error={new ApiError({ kind: 'timeout' })} onRetry={onRetry} />)
+
+    await user.tab()
+    expect(screen.getByRole('button', { name: 'Réessayer' })).toHaveFocus()
+    await user.keyboard('{Enter}')
+
+    expect(onRetry).toHaveBeenCalledOnce()
+  })
+
+  it('applique les remplacements de message', () => {
+    renderWithProviders(
+      <ErrorState
+        error={new ApiError({ kind: 'http', status: 404 })}
+        overrides={{ '404': 'Série introuvable.' }}
+      />,
+    )
+
+    expect(screen.getByText('Série introuvable.')).toBeInTheDocument()
+  })
+})
+
+describe('notifyError, affichage (AC-10, AC-13)', () => {
+  it('affiche le message et un détail repliable dans la notification', async () => {
+    renderWithProviders(<p>page</p>)
+
+    act(() => {
+      notifyError(
+        new ApiError({ kind: 'http', status: 400, backendMessage: 'title should not be empty' }),
+      )
+    })
+
+    expect(await screen.findByText('Certaines informations sont invalides.')).toBeInTheDocument()
+    expect(screen.getByText('Détails')).toBeInTheDocument()
+    expect(screen.getByText('title should not be empty')).toBeInTheDocument()
+  })
+})
+
+describe('applyFieldErrors, cas limites (AC-13)', () => {
+  it('notifie et renvoie false pour un 400 sans phrase du backend', () => {
+    const show = vi.spyOn(notifications, 'show')
+    const form = fakeForm()
+
+    const handled = applyFieldErrors(form, new ApiError({ kind: 'http', status: 400 }), {
+      title: 'title',
+    })
+
+    expect(handled).toBe(false)
+    expect(form.errors).toEqual({})
+    expect(show).toHaveBeenCalledOnce()
+  })
+
+  it('ne place qu’une erreur par champ même avec plusieurs phrases', () => {
+    const form = fakeForm()
+    const setFieldError = vi.spyOn(form, 'setFieldError')
+    const error = new ApiError({
+      kind: 'http',
+      status: 400,
+      backendMessage: ['TITLE should not be empty', 'title must be a string'],
+    })
+
+    expect(applyFieldErrors(form, error, { title: 'title' })).toBe(true)
+    expect(setFieldError).toHaveBeenCalledOnce()
+    expect(form.errors).toEqual({ title: INVALID_FIELD_MESSAGE })
+  })
+
+  it('notifie un 409 qui porte un code au lieu de toucher un champ', () => {
+    const show = vi.spyOn(notifications, 'show')
+    const form = fakeForm()
+    const error = new ApiError({
+      kind: 'http',
+      status: 409,
+      code: 'CATEGORY_IN_USE',
+      body: { seriesCount: 2 },
+    })
+
+    expect(applyFieldErrors(form, error, { name: 'name' })).toBe(false)
+    expect(form.errors).toEqual({})
+    expect(show).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message:
+          "Cette catégorie est encore utilisée par 2 série(s). Retirez la de ces séries d'abord.",
+      }),
+    )
+  })
+
+  it('reste silencieux pour une fin de session', () => {
+    const show = vi.spyOn(notifications, 'show')
+    const form = fakeForm()
+
+    expect(
+      applyFieldErrors(form, new ApiError({ kind: 'session-ended', reason: 'expired' }), {
+        title: 'title',
+      }),
+    ).toBe(false)
+    expect(show).not.toHaveBeenCalled()
   })
 })

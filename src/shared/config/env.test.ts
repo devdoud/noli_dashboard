@@ -18,3 +18,25 @@ describe('parseEnv', () => {
     expect(parseEnv({ VITE_API_BASE_URL: 'pas une url' }).ok).toBe(false)
   })
 })
+
+describe('parseEnv, cas limites (AC-2)', () => {
+  it('accepte une adresse http locale', () => {
+    expect(parseEnv({ VITE_API_BASE_URL: 'http://localhost:3000' })).toEqual({
+      ok: true,
+      env: { apiBaseUrl: 'http://localhost:3000' },
+    })
+  })
+
+  it('retire toutes les barres finales', () => {
+    expect(parseEnv({ VITE_API_BASE_URL: 'https://api.nollli.com///' })).toMatchObject({
+      env: { apiBaseUrl: 'https://api.nollli.com' },
+    })
+  })
+
+  it('traite une chaîne vide comme une variable absente', () => {
+    expect(parseEnv({ VITE_API_BASE_URL: '' })).toMatchObject({
+      ok: false,
+      reason: 'La variable est absente.',
+    })
+  })
+})
