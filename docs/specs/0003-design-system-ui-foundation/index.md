@@ -122,7 +122,7 @@ L'identité vient de l'app mobile `../noli_app` : `lib/core/theme/app_theme.dart
   - puis, **seulement si** `useSession().status === 'authenticated'`, l'email de l'admin (masqué sous `sm`) et le bouton « Se déconnecter ».
 - Pendant `restoring` et `anonymous`, l'en tête n'affiche rien qui concerne la session.
 - Bouton de thème : `ActionIcon` avec une icône soleil ou lune, et un `aria-label` « Passer en mode clair » ou « Passer en mode sombre ».
-- Pas d'image de logo dans l'en tête : la marque est le seul texte « Noli » (choix de l'engineer, 2026-10-13, qui remplace le logo et « Admin » initialement prévus). Le favicon `public/favicon.png` est une icône « N » (choix de l'engineer, 2026-10-13) : 64 × 64 px, carré arrondi ambre `#F5A623`, lettre `#0B0C10` en Bricolage Grotesque ExtraBold ; `public/favicon.svg` est retiré.
+- Pas d'image de logo dans l'en tête : la marque est le seul texte « Noli » (choix de l'engineer, 2026-10-13, qui remplace le logo et « Admin » initialement prévus). Le favicon `public/favicon-n.png` est une icône « N » (choix de l'engineer, 2026-10-13) : 64 × 64 px, carré arrondi ambre `#F5A623`, lettre `#0B0C10` en Bricolage Grotesque ExtraBold ; `public/favicon.svg` est retiré.
 - « Se déconnecter » appelle `logout()` (spec 0002), sans navigation ici : la redirection vers la connexion appartient à la garde de routes de la fonctionnalité 5. Son nom accessible reste « Se déconnecter » quand l'email est masqué.
 - Menu latéral :
   - liens `NavLink` de Mantine rendus avec le `NavLink` de React Router (`component`), qui pose `aria-current="page"` ; `end` est réglé pour `/` seulement, si bien que Séries reste active sur `/series/123` ;

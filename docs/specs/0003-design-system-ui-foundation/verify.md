@@ -22,7 +22,7 @@ Lancer `npm run dev`, ouvrir `http://localhost:5173`. Vérifier en mode clair et
 
 ## Commands
 - [x] `npm run build` puis `grep -rl "DevComponentsPage\|Vitrine du design system" dist/` → aucun fichier → AC-13
-- [x] `ls dist/fonts dist/color-scheme.js dist/favicon.png` → présents → AC-2, AC-3
+- [x] `ls dist/fonts dist/color-scheme.js dist/favicon-n.png` → présents → AC-2, AC-3
 - [x] `npx vitest run src/shared/ui src/app` → tous les tests passent → AC-2, AC-5 à AC-12, AC-15
 - [x] `design.md` à la racine : palettes en hexadécimal, contrastes mesurés, typographie, espacements, mise en page, composants → AC-14
 
