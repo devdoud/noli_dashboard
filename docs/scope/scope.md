@@ -14,7 +14,7 @@ _Ce sont des recommandations pour garder une construction ordonnée, pas des obl
 | 1 | Stack & architecture | Foundation | done |
 | 2 | Coding standards & tooling | Foundation | done |
 | 3 | Client API & erreurs | Foundation | done |
-| 4 | Design system & UI foundation | Foundation | planned |
+| 4 | Design system & UI foundation | Foundation | in-progress |
 | 5 | Connexion admin et liste des séries | Slice 1 | planned |
 | 6 | Fiche série | Slice 2 | planned |
 | 7 | Épisodes | Slice 3 | planned |
@@ -53,10 +53,18 @@ Une seule façon d'appeler l'API pour tout le dashboard : client typé à partir
 - [x] Test it: `/test client API & erreurs`
 Spec [0002](../specs/0002-client-api-erreurs/index.md) · code in `src/shared/` (`api/`, `session/`, `query/`, `ui/`, `config/`)
 
-### 4. Design system & UI foundation · needs a decision
+### 4. Design system & UI foundation · in-progress
 Langage visuel, mise en page (menu latéral, en tête, contenu) et composants de base : tableau paginé, formulaire, boîte de confirmation, notification courte.
 **Done when:** `design.md` couvre typographie, couleurs, espacements et composants ; les composants de base gèrent le clavier et le focus ; la mise en page reste lisible sur téléphone.
-- [ ] Design it (spec): `/architect design system & UI foundation`
+- [x] Design it (spec): `/architect design system & UI foundation`
+- [ ] Build it: `/develop design system & UI foundation`
+   - [ ] Thème et identité : polices, logo, palettes, modes clair et sombre sans clignotement (AC-1 à AC-4)
+   - [ ] Mise en page : `AppLayout`, menu et ☰, en tête avec session, `PageHeader`, 404, vitrine (AC-5, AC-6, AC-7, AC-12, AC-13, AC-15)
+   - [ ] Composants : `DataTable`, `EmptyState`, `TableSkeleton`, `confirmDanger`, `notifySuccess`, formatage (AC-8 à AC-11)
+   - [ ] Contrastes mesurés et `design.md` (AC-4, AC-14)
+- [ ] Verify it: `/check verify design system & UI foundation`
+- [ ] Test it: `/test design system & UI foundation`
+Spec [0003](../specs/0003-design-system-ui-foundation/index.md)
 
 ## Slice 1: Connexion admin et liste des séries
 
