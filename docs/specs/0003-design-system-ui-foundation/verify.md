@@ -4,7 +4,7 @@ _Steps derived from spec 0003 acceptance criteria. `/check verify` runs these; `
 Lancer `npm run dev`, ouvrir `http://localhost:5173`. Vérifier en mode clair et en mode sombre (réglage du système ou bouton de thème), sur ordinateur (1280 px) et sur téléphone (375 px).
 
 ## UI / manual
-- [ ] Mode sombre : fond de page `#0B0C10`, cartes et menu en `#13141B`, bouton principal ambre `#F5A623` avec un texte sombre → AC-1
+- [x] Mode sombre : fond de page `#0B0C10`, cartes et menu en `#13141B`, bouton principal ambre `#F5A623` avec un texte sombre → AC-1
 - [x] Recharger avec le système en sombre puis en clair : le bon mode s'affiche dès le premier rendu, sans clignotement ; aucune erreur CSP dans la console → AC-2
 - [x] Cliquer le bouton de thème : le mode change, `localStorage['noli-admin-color-scheme']` vaut `dark` ou `light`, et le choix survit au rechargement → AC-2
 - [x] Onglet Réseau : les polices viennent de `/fonts/*.woff2` (même origine), aucune requête vers un autre domaine ; les titres sont en Bricolage Grotesque et le texte en Plus Jakarta Sans → AC-3
@@ -27,7 +27,7 @@ Lancer `npm run dev`, ouvrir `http://localhost:5173`. Vérifier en mode clair et
 - [x] `design.md` à la racine : palettes en hexadécimal, contrastes mesurés, typographie, espacements, mise en page, composants → AC-14
 
 ## Value sourcing
-- [ ] Couleurs de marque identiques à `NColors` de `../noli_app/lib/core/theme/app_theme.dart` (`#0B0C10`, `#13141B`, `#1C1D26`, `#F5A623`, `#6C5CE7`, `#FF4D6D`) → AC-1
+- [x] Couleurs de marque identiques à `NColors` de `../noli_app/lib/core/theme/app_theme.dart` (`#0B0C10`, `#13141B`, `#1C1D26`, `#F5A623`, `#6C5CE7`, `#FF4D6D`) → AC-1
 - [x] Mode au premier chargement : supprimer la clé `noli-admin-color-scheme`, recharger en système sombre puis clair → le mode suit le système → AC-2
 - [ ] Email de l'en tête lu dans la session : après une connexion (fonctionnalité 5), l'email de l'admin s'affiche, « Se déconnecter » ramène la session à `anonymous` → AC-5
 - [x] `formatDuration` lit des secondes : `1500` → « 25 min » (pas « 1500 min ») → AC-11

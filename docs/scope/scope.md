@@ -62,7 +62,7 @@ Langage visuel, mise en page (menu latéral, en tête, contenu) et composants de
    - [x] Mise en page : `AppLayout`, menu et ☰, en tête avec session, `PageHeader`, 404, vitrine (AC-5, AC-6, AC-7, AC-12, AC-13, AC-15)
    - [x] Composants : `DataTable`, `EmptyState`, `TableSkeleton`, `confirmDanger`, `notifySuccess`, formatage (AC-8 à AC-11)
    - [x] Contrastes mesurés et `design.md` (AC-4, AC-14)
-- [ ] Verify it: `/check verify design system & UI foundation`
+- [x] Verify it: `/check verify design system & UI foundation`
 - [ ] Test it: `/test design system & UI foundation`
 Spec [0003](../specs/0003-design-system-ui-foundation/index.md) · code in `src/shared/ui/`, `src/app/` (routes, pages, `dev/`), `public/` (polices, logo, `color-scheme.js`), `design.md`
 
