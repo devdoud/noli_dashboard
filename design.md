@@ -37,7 +37,7 @@ Un écran n'utilise que Mantine et les composants de `src/shared/ui/`. Une coule
 - **Rouge `#FF4D6D` :**
   - réservé aux erreurs et aux suppressions ;
   - le bouton danger utilise le rouge 8 `#B3364C` avec un texte blanc.
-- **Marque dans l'en tête :** le seul texte « Noli », en Bricolage Grotesque, sans image de logo.
+- **Marque dans l'en tête :** le seul texte « Noli », en Bricolage Grotesque, sans image de logo. Le favicon est un « N » sombre sur un carré arrondi ambre (`public/favicon.png`).
 
 ## Couleurs
 
