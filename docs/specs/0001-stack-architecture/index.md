@@ -82,7 +82,7 @@ Règle : une fonctionnalité peut importer depuis `shared/`, jamais depuis une a
 - En local, pointez vers l'API locale. Un `.env.local` qui pointe vers l'API de production fait modifier du **vrai contenu** à chaque test.
 
 **Valeurs à fournir** (elles n'existent pas encore ; le scaffold laisse des valeurs à remplacer, clairement marquées) :
-- l'adresse de l'API de production sur Render (`https://<service>.onrender.com`) ;
+- l'adresse de l'API de production : `https://api.nollli.com` (servie par Render) ;
 - l'adresse du dashboard sur Render (ou un domaine personnalisé), connue après la création du site.
 
 ### Hébergement sur Render
@@ -98,7 +98,7 @@ La configuration vit dans un fichier `render.yaml` commité à la racine, pour q
 
 ### Ce que le backend doit changer
 
-- Activer CORS dans `../noli-backend/src/main.ts` avec `app.enableCors({ origin: <liste> })`, la liste venant d'une nouvelle variable d'environnement `CORS_ORIGINS` (origines séparées par des virgules, par exemple `http://localhost:5173,https://<dashboard>.onrender.com`).
+- Activer CORS dans `../noli-backend/src/main.ts` avec `app.enableCors({ origin: <liste> })`, la liste venant d'une nouvelle variable d'environnement `CORS_ORIGINS` (origines séparées par des virgules, par exemple `http://localhost:5173,https://<adresse du dashboard>`).
 - Réglages : méthodes `GET, POST, PATCH, PUT, DELETE`, en tête `Authorization` et `Content-Type` autorisés, **pas** de `credentials` (aucun cookie n'est utilisé).
 - Sans cela, le navigateur bloque tous les appels du dashboard.
 

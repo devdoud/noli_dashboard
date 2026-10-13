@@ -15,7 +15,7 @@ Le dashboard sert aux **admins** à gérer le contenu sans passer par Swagger ni
 
 ## L'API à utiliser
 
-- **Production (Render)** : `https://<service>.onrender.com`. Demander l'URL exacte à l'utilisateur.
+- **Production (Render)** : `https://api.nollli.com`.
 - **Local** : `http://localhost:3000`, avec `npm run start:dev` dans `../noli-backend`.
 - **Documentation** :
   - `../noli-backend/docs/api-reference.md`, en français : la section **9. Routes admin** liste toutes les routes du dashboard ; les sections 1 à 3 donnent les règles générales et la connexion ;
