@@ -25,7 +25,6 @@ const CODE_MESSAGES: Readonly<Record<string, string>> = {
 const STATUS_MESSAGES: Readonly<Record<number, string>> = {
   400: 'Certaines informations sont invalides.',
   401: 'Email ou mot de passe incorrect.',
-  403: NOT_ADMIN_MESSAGE,
   404: 'Élément introuvable. Il a peut être été supprimé.',
   409: 'Cet élément existe déjà (nom ou titre déjà pris).',
   413: 'Fichier trop lourd : 5 Mo au plus.',

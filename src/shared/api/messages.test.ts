@@ -14,7 +14,8 @@ describe('toUserMessage', () => {
     [http(400), 'Certaines informations sont invalides.'],
     [http(401), 'Email ou mot de passe incorrect.'],
     [new ApiError({ kind: 'not-admin' }), "Ce compte n'a pas accès au tableau de bord."],
-    [http(403), "Ce compte n'a pas accès au tableau de bord."],
+    [http(403), 'Une erreur inattendue est survenue.'],
+    [http(403, { code: 'PREMIUM_REQUIRED' }), 'Une erreur inattendue est survenue.'],
     [
       new ApiError({ kind: 'session-ended', reason: 'expired' }),
       'Votre session a expiré, reconnectez vous.',

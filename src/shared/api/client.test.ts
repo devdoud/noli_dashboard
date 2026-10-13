@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import { z } from 'zod'
-import { apiRequest, registerSessionHooks } from '@/shared/api/client'
+import { apiRequest, MAX_TEXT_BODY_LENGTH, registerSessionHooks } from '@/shared/api/client'
 import { ApiError } from '@/shared/api/errors'
 import { getSlowRequestCount } from '@/shared/api/slowRequests'
 import { server } from '@/test/server'
@@ -102,7 +102,27 @@ describe('apiRequest sans session', () => {
       apiRequest({ method: 'GET', path: '/series', schema: z.unknown(), auth: false }),
     )
 
-    expect(error).toMatchObject({ kind: 'http', status: 503, code: undefined })
+    expect(error).toMatchObject({
+      kind: 'http',
+      status: 503,
+      code: undefined,
+      backendMessage: undefined,
+    })
+  })
+
+  it('tronque un long corps texte', async () => {
+    const long = 'x'.repeat(MAX_TEXT_BODY_LENGTH + 50)
+    server.use(http.get(`${API}/series`, () => new HttpResponse(long, { status: 502 })))
+
+    const error = await captureError(
+      apiRequest({ method: 'GET', path: '/series', schema: z.unknown(), auth: false }),
+    )
+
+    expect(error).toMatchObject({
+      kind: 'http',
+      backendMessage: `${'x'.repeat(MAX_TEXT_BODY_LENGTH)}…`,
+      body: `${'x'.repeat(MAX_TEXT_BODY_LENGTH)}…`,
+    })
   })
 
   it('lève network quand le serveur est injoignable', async () => {

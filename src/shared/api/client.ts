@@ -74,15 +74,12 @@ function buildInit(
 ): RequestInit {
   const headers = new Headers({ Accept: 'application/json' })
   if (token !== undefined) headers.set('Authorization', `Bearer ${token}`)
-  const isForm = options.body instanceof FormData
-  if (options.body !== undefined && !isForm) headers.set('Content-Type', 'application/json')
-  const body: BodyInit | undefined =
-    options.body === undefined
-      ? undefined
-      : options.body instanceof FormData
-        ? options.body
-        : JSON.stringify(options.body)
-  return { method: options.method, headers, body: body ?? null, signal }
+  if (options.body === undefined) return { method: options.method, headers, body: null, signal }
+  if (options.body instanceof FormData) {
+    return { method: options.method, headers, body: options.body, signal }
+  }
+  headers.set('Content-Type', 'application/json')
+  return { method: options.method, headers, body: JSON.stringify(options.body), signal }
 }
 
 /** Relie un signal externe à un AbortController, renvoie la fonction qui défait le lien. */
@@ -148,8 +145,20 @@ function readField(body: unknown, key: string): unknown {
     : undefined
 }
 
+/** Longueur maximale gardée d'un corps texte (page d'erreur d'un proxy, texte brut). */
+export const MAX_TEXT_BODY_LENGTH = 300
+
+function looksLikeHtml(text: string): boolean {
+  return /^\s*</.test(text)
+}
+
+function truncate(text: string): string {
+  return text.length > MAX_TEXT_BODY_LENGTH ? `${text.slice(0, MAX_TEXT_BODY_LENGTH)}…` : text
+}
+
 function backendMessageOf(body: ParsedBody): string | readonly string[] | undefined {
-  if (body.kind === 'text') return body.value
+  // Une page HTML (502 ou 503 de Render au réveil) n'apporte rien de lisible en détail.
+  if (body.kind === 'text') return looksLikeHtml(body.value) ? undefined : truncate(body.value)
   if (body.kind !== 'json') return undefined
   const message = readField(body.value, 'message')
   if (typeof message === 'string') return message
@@ -171,11 +180,11 @@ function endSessionAndThrow(reason: Exclude<SessionEndReason, 'logout'>): never 
   throw new ApiError({ kind: 'session-ended', reason })
 }
 
+/** Tout 4xx sur /auth/refresh, ou l'absence de refresh token, est un refus. */
 function isRefreshRefused(error: unknown): boolean {
-  return (
-    isApiError(error) &&
-    ((error.kind === 'http' && error.status === 401) || error.kind === 'session-ended')
-  )
+  if (!isApiError(error)) return false
+  if (error.kind === 'session-ended') return error.reason === 'expired'
+  return error.kind === 'http' && (error.status ?? 0) >= 400 && (error.status ?? 0) < 500
 }
 
 function toResult<T>(options: ApiRequestOptions<T>, raw: RawResponse, auth: boolean): T {
@@ -204,7 +213,8 @@ function toResult<T>(options: ApiRequestOptions<T>, raw: RawResponse, auth: bool
     status: raw.status,
     code,
     backendMessage: backendMessageOf(body),
-    body: body.kind === 'empty' ? undefined : body.value,
+    body:
+      body.kind === 'json' ? body.value : body.kind === 'text' ? truncate(body.value) : undefined,
   })
 }
 
@@ -217,6 +227,8 @@ async function newTokenAfter401(sentToken: string | undefined): Promise<string> 
     return await hooks.refresh()
   } catch (error) {
     if (isRefreshRefused(error)) return endSessionAndThrow('expired')
+    // Une fin de session déjà décidée (déconnexion pendant le renouvellement) garde sa raison ;
+    // une erreur réseau ou serveur remonte telle quelle, sans fermer la session.
     throw error
   }
 }

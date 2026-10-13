@@ -28,10 +28,13 @@ const INITIAL_STATE: SessionState = { status: 'restoring' }
 const store: {
   state: SessionState
   accessToken: string | undefined
+  /** Copie de secours du refresh token si sessionStorage est indisponible. */
+  refreshToken: string | undefined
   readonly listeners: Set<() => void>
 } = {
   state: INITIAL_STATE,
   accessToken: undefined,
+  refreshToken: undefined,
   listeners: new Set(),
 }
 
@@ -63,22 +66,25 @@ export function setAccessToken(token: string | undefined): void {
 
 export function readRefreshToken(): string | undefined {
   try {
-    return window.sessionStorage.getItem(REFRESH_TOKEN_KEY) ?? undefined
+    return window.sessionStorage.getItem(REFRESH_TOKEN_KEY) ?? store.refreshToken
   } catch {
-    return undefined
+    return store.refreshToken
   }
 }
 
 export function writeRefreshToken(token: string): void {
+  store.refreshToken = token
   try {
     window.sessionStorage.setItem(REFRESH_TOKEN_KEY, token)
   } catch {
-    // Stockage indisponible (navigation privée stricte) : la session vivra seulement en mémoire.
+    // Stockage indisponible (navigation privée stricte) : la copie en mémoire garde la session
+    // dans cet onglet jusqu'au rechargement de la page.
   }
 }
 
 export function clearTokens(): void {
   store.accessToken = undefined
+  store.refreshToken = undefined
   try {
     window.sessionStorage.removeItem(REFRESH_TOKEN_KEY)
   } catch {

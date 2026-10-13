@@ -381,3 +381,180 @@ describe('onglets', () => {
     expect(getSessionState()).toEqual({ status: 'anonymous', endReason: 'logout' })
   })
 })
+
+describe('cas limites relevés en revue', () => {
+  it('annule la reprise quand un autre onglet se déconnecte pendant qu’elle tourne', async () => {
+    window.sessionStorage.setItem(REFRESH_TOKEN_KEY, 'refresh-1')
+    const profileCalls = { count: 0 }
+    server.use(
+      http.post(`${API}/auth/refresh`, async () => {
+        await delay(80)
+        return HttpResponse.json({ accessToken: 'access-9' })
+      }),
+      http.get(`${API}/auth/profile`, () => {
+        profileCalls.count += 1
+        return HttpResponse.json({ user: { ...adminUser, _id: 'u1' } })
+      }),
+    )
+    const { tab } = openOtherTab()
+
+    const restoring = restoreSession()
+    await flush()
+    tab.postMessage({ type: 'logout' })
+    await restoring
+
+    expect(getSessionState()).toEqual({ status: 'anonymous' })
+    expect(getAccessToken()).toBeUndefined()
+    expect(window.sessionStorage.getItem(REFRESH_TOKEN_KEY)).toBeNull()
+    expect(profileCalls.count).toBe(0)
+  })
+
+  it('une connexion pendant la reprise garde le token de la connexion', async () => {
+    window.sessionStorage.setItem(REFRESH_TOKEN_KEY, 'refresh-ancien')
+    server.use(
+      http.post(`${API}/auth/refresh`, async () => {
+        await delay(80)
+        return HttpResponse.json({ accessToken: 'access-ancien-compte' })
+      }),
+      profileHandler(),
+      loginHandler(),
+    )
+
+    const restoring = restoreSession()
+    await flush()
+    await login('admin@noli.test', 'secret')
+    await restoring
+
+    expect(getAccessToken()).toBe('access-1')
+    expect(window.sessionStorage.getItem(REFRESH_TOKEN_KEY)).toBe('refresh-1')
+    expect(getSessionState()).toEqual({ status: 'authenticated', user: adminUser })
+  })
+
+  it('une connexion vide le cache du compte précédent', async () => {
+    const queryClient = new QueryClient()
+    registerQueryClient(queryClient)
+    server.use(loginHandler())
+    await login('admin@noli.test', 'secret')
+    queryClient.setQueryData(['series'], ['donnée du premier compte'])
+
+    await login('admin@noli.test', 'secret')
+
+    expect(queryClient.getQueryData(['series'])).toBeUndefined()
+  })
+
+  it('transforme un 403 à la connexion en refus d’accès', async () => {
+    server.use(
+      http.post(`${API}/auth/login`, () =>
+        HttpResponse.json({ statusCode: 403, message: 'Forbidden' }, { status: 403 }),
+      ),
+    )
+
+    expect(await captureError(login('admin@noli.test', 'secret'))).toMatchObject({
+      kind: 'not-admin',
+    })
+  })
+
+  it('met fin à la session si la requête rejouée reçoit encore 401', async () => {
+    server.use(
+      loginHandler(),
+      protectedHandler('/items', 'jamais'),
+      http.post(`${API}/auth/refresh`, () => HttpResponse.json({ accessToken: 'access-2' })),
+    )
+    await login('admin@noli.test', 'secret')
+
+    const error = await captureError(getOk('/items'))
+
+    expect(error).toMatchObject({ kind: 'session-ended', reason: 'expired' })
+    expect(getSessionState()).toMatchObject({ status: 'anonymous', endReason: 'expired' })
+  })
+
+  it('garde la session si le refresh échoue sur le réseau', async () => {
+    server.use(
+      loginHandler(),
+      protectedHandler('/items', 'jamais'),
+      http.post(`${API}/auth/refresh`, () => HttpResponse.error()),
+    )
+    await login('admin@noli.test', 'secret')
+
+    const error = await captureError(getOk('/items'))
+
+    expect(error).toMatchObject({ kind: 'network' })
+    expect(getSessionState().status).toBe('authenticated')
+    expect(window.sessionStorage.getItem(REFRESH_TOKEN_KEY)).toBe('refresh-1')
+  })
+
+  it('traite un 400 sur le refresh comme un refus', async () => {
+    server.use(
+      loginHandler(),
+      protectedHandler('/items', 'jamais'),
+      http.post(`${API}/auth/refresh`, () =>
+        HttpResponse.json(
+          { statusCode: 400, message: ['refreshToken must be a string'] },
+          { status: 400 },
+        ),
+      ),
+    )
+    await login('admin@noli.test', 'secret')
+
+    const error = await captureError(getOk('/items'))
+
+    expect(error).toMatchObject({ kind: 'session-ended', reason: 'expired' })
+    expect(getSessionState()).toMatchObject({ status: 'anonymous', endReason: 'expired' })
+  })
+
+  it('garde la raison logout quand la déconnexion survient pendant le renouvellement', async () => {
+    server.use(
+      loginHandler(),
+      protectedHandler('/items', 'jamais'),
+      http.post(`${API}/auth/refresh`, async () => {
+        await delay(80)
+        return HttpResponse.json({ accessToken: 'access-2' })
+      }),
+    )
+    await login('admin@noli.test', 'secret')
+
+    const pending = captureError(getOk('/items'))
+    await flush()
+    logout()
+    const error = await pending
+
+    expect(error).toMatchObject({ kind: 'session-ended', reason: 'logout' })
+    expect(getSessionState()).toEqual({ status: 'anonymous', endReason: 'logout' })
+    expect(getAccessToken()).toBeUndefined()
+  })
+
+  it('annule les requêtes en cours à la déconnexion', async () => {
+    server.use(
+      loginHandler(),
+      http.get(`${API}/pending`, () => new Promise<never>(() => undefined)),
+    )
+    await login('admin@noli.test', 'secret')
+
+    const pending = captureError(getOk('/pending'))
+    await flush()
+    logout()
+
+    expect(await pending).toMatchObject({ name: 'AbortError' })
+  })
+
+  it('garde le refresh token en mémoire si sessionStorage est bloqué', async () => {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('quota', 'QuotaExceededError')
+    })
+    server.use(
+      loginHandler(),
+      protectedHandler('/items', 'access-2'),
+      http.post(`${API}/auth/refresh`, async ({ request }) => {
+        const body = (await request.json()) as { refreshToken?: string }
+        return body.refreshToken === 'refresh-1'
+          ? HttpResponse.json({ accessToken: 'access-2' })
+          : HttpResponse.json({ statusCode: 401 }, { status: 401 })
+      }),
+    )
+    await login('admin@noli.test', 'secret')
+
+    await expect(getOk('/items')).resolves.toEqual({ ok: true })
+    expect(getSessionState().status).toBe('authenticated')
+    vi.restoreAllMocks()
+  })
+})

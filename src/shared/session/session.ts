@@ -7,7 +7,7 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 import { apiRequest, registerSessionHooks } from '@/shared/api/client'
-import { ApiError, type SessionEndReason } from '@/shared/api/errors'
+import { ApiError, isApiError, type SessionEndReason } from '@/shared/api/errors'
 import { SESSION_EXPIRED_MESSAGE, SESSION_FORBIDDEN_MESSAGE } from '@/shared/api/messages'
 import {
   clearTokens,
@@ -52,6 +52,7 @@ const profileSchema = z.object({
 const session: {
   refreshPromise: Promise<string> | undefined
   restorePromise: Promise<void> | undefined
+  /** Jamais remis à false : la reprise ne tourne qu'une fois par chargement de page. */
   restoreCancelled: boolean
   controller: AbortController
   queryClient: QueryClient | undefined
@@ -136,14 +137,24 @@ export function refreshAccessToken(): Promise<string> {
   return promise
 }
 
-export async function login(email: string, password: string): Promise<AdminUser> {
-  const result = await apiRequest({
+function requestLogin(email: string, password: string) {
+  return apiRequest({
     method: 'POST',
     path: '/auth/login',
     body: { email, password },
     auth: false,
     schema: loginSchema,
+  }).catch((error: unknown) => {
+    // Un 403 à la connexion veut dire « pas d'accès au tableau de bord » (table AC-10).
+    if (isApiError(error) && error.kind === 'http' && error.status === 403) {
+      throw new ApiError({ kind: 'not-admin' })
+    }
+    throw error
   })
+}
+
+export async function login(email: string, password: string): Promise<AdminUser> {
+  const result = await requestLogin(email, password)
   if (result.user.role !== 'admin') throw new ApiError({ kind: 'not-admin' })
   const user: AdminUser = {
     id: result.user.id,
@@ -153,7 +164,9 @@ export async function login(email: string, password: string): Promise<AdminUser>
   }
   if (getSessionState().status === 'restoring') session.restoreCancelled = true
   ensureTabSync()
-  session.controller = new AbortController()
+  // Repartir de zéro : un renouvellement en cours (reprise, ancien compte) ne peut plus écrire
+  // son token, et le cache d'un compte précédent est vidé.
+  resetSessionResources()
   setAccessToken(result.accessToken)
   writeRefreshToken(result.refreshToken)
   setSessionState({ status: 'authenticated', user })
