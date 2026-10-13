@@ -9,7 +9,7 @@ Lancer `npm run dev`, ouvrir `http://localhost:5173`. Vérifier en mode clair et
 - [x] Cliquer le bouton de thème : le mode change, `localStorage['noli-admin-color-scheme']` vaut `dark` ou `light`, et le choix survit au rechargement → AC-2
 - [x] Onglet Réseau : les polices viennent de `/fonts/*.woff2` (même origine), aucune requête vers un autre domaine ; les titres sont en Bricolage Grotesque et le texte en Plus Jakarta Sans → AC-3
 - [x] Sur `/dev/composants`, en clair et en sombre : textes, liens, badges, boutons et alertes lisibles ; la bordure des champs reste visible → AC-4
-- [x] En tête : logo, « Admin » et bouton de thème ; sans session, ni email ni « Se déconnecter » → AC-5
+- [x] En tête : le texte « Noli » (sans image de logo) et le bouton de thème ; sans session, ni email ni « Se déconnecter » → AC-5
 - [x] À 375 px : ☰ ouvre le menu, choisir une entrée le ferme, Échap le ferme et rend le focus à ☰ ; menu fermé, Tab ne passe pas par ses liens → AC-5
 - [x] Menu : seule « Vue d'ensemble » apparaît, marquée comme page courante → AC-6
 - [x] Premier Tab : « Aller au contenu » apparaît ; Entrée envoie le focus sur le contenu ; le focus reste visible partout ; l'onglet affiche « Vue d'ensemble · Noli Admin » → AC-7
@@ -22,7 +22,7 @@ Lancer `npm run dev`, ouvrir `http://localhost:5173`. Vérifier en mode clair et
 
 ## Commands
 - [x] `npm run build` puis `grep -rl "DevComponentsPage\|Vitrine du design system" dist/` → aucun fichier → AC-13
-- [x] `ls dist/fonts dist/color-scheme.js dist/favicon.png dist/noli-logo.png` → présents → AC-2, AC-3
+- [x] `ls dist/fonts dist/color-scheme.js dist/favicon.png` → présents → AC-2, AC-3
 - [x] `npx vitest run src/shared/ui src/app` → tous les tests passent → AC-2, AC-5 à AC-12, AC-15
 - [x] `design.md` à la racine : palettes en hexadécimal, contrastes mesurés, typographie, espacements, mise en page, composants → AC-14
 

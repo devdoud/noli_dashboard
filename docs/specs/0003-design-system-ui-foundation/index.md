@@ -20,7 +20,7 @@ Le dashboard reprend l'identité de l'app mobile Noli (ambre safran, indigo, fon
 - **AC-2**: Le mode de couleurs suit le réglage du système au premier chargement ; un bouton dans l'en tête bascule clair ou sombre, et le choix est retenu au rechargement (`localStorage`, clé `noli-admin-color-scheme`). Le bon mode est appliqué avant le premier affichage (pas de clignotement), sans script en ligne (la CSP `script-src 'self'` reste inchangée).
 - **AC-3**: Les titres utilisent Bricolage Grotesque, le texte Plus Jakarta Sans, servies par le dashboard lui même (aucune requête vers un autre domaine, la CSP `font-src 'self'` reste inchangée).
 - **AC-4**: Tout texte respecte un contraste d'au moins 4,5:1 et tout élément d'interface porteur de sens (bordure de champ, icône seule, focus, bouton plein) d'au moins 3:1 sur son fond, en mode clair et en mode sombre ; les contrastes réellement mesurés sont notés dans `design.md`.
-- **AC-5**: La mise en page a un en tête (logo, « Admin », bouton de thème, et quand la session est `authenticated` l'email de l'admin et un bouton « Se déconnecter ») et un menu latéral ; sous 768 px de large, l'email est masqué, le menu se replie derrière un bouton ☰ accessible (`aria-label`, `aria-expanded`, `aria-controls`), se ferme après un choix ou avec Échap, et rend alors le focus au bouton ☰.
+- **AC-5**: La mise en page a un en tête (le texte « Noli », bouton de thème, et quand la session est `authenticated` l'email de l'admin et un bouton « Se déconnecter ») et un menu latéral ; sous 768 px de large, l'email est masqué, le menu se replie derrière un bouton ☰ accessible (`aria-label`, `aria-expanded`, `aria-controls`), se ferme après un choix ou avec Échap, et rend alors le focus au bouton ☰.
 - **AC-6**: Le menu affiche, dans cet ordre, Vue d'ensemble, Séries, Catégories, Outils ; une entrée dont l'écran n'est pas encore construit est masquée ; l'entrée de la page courante (et de ses sous pages) est marquée `aria-current="page"`, « Vue d'ensemble » seulement sur `/`.
 - **AC-7**: Tout élément interactif est atteignable au clavier dans un ordre logique, avec un focus visible ; un lien d'évitement « Aller au contenu » est le premier élément atteint par Tab et met le focus sur le contenu principal ; le titre de l'onglet (`document.title`) suit la page.
 - **AC-8**: `DataTable` affiche des lignes et une pagination pilotée par le serveur, selon l'ordre de priorité de la section « DataTable » ; le tableau a une légende accessible et défile horizontalement sur petit écran sans casser la page.
@@ -97,7 +97,7 @@ L'identité vient de l'app mobile `../noli_app` : `lib/core/theme/app_theme.dart
 
 | Famille | Graisses | Fichiers sources (`../noli_app/assets/google_fonts/`) | Usage |
 |---|---|---|---|
-| Bricolage Grotesque | 700, 800 | `BricolageGrotesque-Bold.ttf`, `BricolageGrotesque-ExtraBold.ttf` | titres `h1` à `h4`, « Admin » |
+| Bricolage Grotesque | 700, 800 | `BricolageGrotesque-Bold.ttf`, `BricolageGrotesque-ExtraBold.ttf` | titres `h1` à `h4`, « Noli » dans l'en tête |
 | Plus Jakarta Sans | 400, 500, 600, 700 | `PlusJakartaSans-Regular.ttf`, `-Medium.ttf`, `-SemiBold.ttf`, `-Bold.ttf` | texte, tableaux, formulaires |
 
 - Conversion en `woff2`, une fois, et commit des fichiers convertis dans `src/shared/ui/fonts/`, avec les deux licences OFL.
@@ -117,12 +117,12 @@ L'identité vient de l'app mobile `../noli_app` : `lib/core/theme/app_theme.dart
 - `AppShell` de Mantine : en tête de 56 px, menu latéral de 240 px, point de rupture `sm` (768 px), menu replié sous ce point (`navbar.collapsed.mobile`).
 - En tête, de gauche à droite :
   - le bouton ☰ (`Burger`), affiché seulement sous `sm` ;
-  - le logo, suivi de « Admin » ;
+  - le texte « Noli » (Bricolage Grotesque, graisse 800), lien vers `/` ;
   - un espace, puis le bouton de thème ;
   - puis, **seulement si** `useSession().status === 'authenticated'`, l'email de l'admin (masqué sous `sm`) et le bouton « Se déconnecter ».
 - Pendant `restoring` et `anonymous`, l'en tête n'affiche rien qui concerne la session.
 - Bouton de thème : `ActionIcon` avec une icône soleil ou lune, et un `aria-label` « Passer en mode clair » ou « Passer en mode sombre ».
-- Logo : `public/noli-logo.png`, affiché en 28 × 28 px avec `width` et `height` fixés, `alt=""` (il est décoratif, puisque « Admin » le suit). Le favicon devient `public/favicon.png` (le même logo réduit à 64 × 64 px), et `public/favicon.svg` est retiré.
+- Pas d'image de logo dans l'en tête : la marque est le seul texte « Noli » (choix de l'engineer, 2026-10-13, qui remplace le logo et « Admin » initialement prévus). Le favicon reste `public/favicon.png` (le logo de l'app réduit à 64 × 64 px), et `public/favicon.svg` est retiré.
 - « Se déconnecter » appelle `logout()` (spec 0002), sans navigation ici : la redirection vers la connexion appartient à la garde de routes de la fonctionnalité 5. Son nom accessible reste « Se déconnecter » quand l'email est masqué.
 - Menu latéral :
   - liens `NavLink` de Mantine rendus avec le `NavLink` de React Router (`component`), qui pose `aria-current="page"` ; `end` est réglé pour `/` seulement, si bien que Séries reste active sur `/series/123` ;

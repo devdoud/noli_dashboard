@@ -12,7 +12,7 @@ spec: "docs/specs/0003-design-system-ui-foundation/index.md"
 ## Build mandate
 
 Chaque écran sort comme une surface produit complète et professionnelle, jamais un formulaire seul sur une page vide. Il porte :
-- la marque (logo et « Admin » dans l'en tête) ;
+- la marque (le texte « Noli » dans l'en tête) ;
 - un vrai titre et une description en français, écrits pour l'admin ;
 - une mise en page hiérarchisée ;
 - tous ses états : chargement, vide, erreur ;
@@ -37,7 +37,7 @@ Un écran n'utilise que Mantine et les composants de `src/shared/ui/`. Une coule
 - **Rouge `#FF4D6D` :**
   - réservé aux erreurs et aux suppressions ;
   - le bouton danger utilise le rouge 8 `#B3364C` avec un texte blanc.
-- **Logo :** l'icône Noli sur sa tuile sombre, lisible sur les deux fonds.
+- **Marque dans l'en tête :** le seul texte « Noli », en Bricolage Grotesque, sans image de logo.
 
 ## Couleurs
 
@@ -95,7 +95,7 @@ Toute nouvelle couleur doit être mesurée dans les deux modes avant d'être uti
 
 ## Typographie
 
-- **Titres** (`h1` à `h4`, « Admin ») : Bricolage Grotesque, graisses 700 et 800.
+- **Titres** (`h1` à `h4`, « Noli » dans l'en tête) : Bricolage Grotesque, graisses 700 et 800.
 - **Texte, tableaux, formulaires :** Plus Jakarta Sans, graisses 400, 500, 600 et 700.
 - **Fichiers :** woff2 dans `public/fonts/`, avec leurs licences OFL. Les deux fichiers principaux sont préchargés dans `index.html`, avec `font-display: swap` et `system-ui` en secours.
 - **Tailles :**
@@ -113,7 +113,7 @@ Toute nouvelle couleur doit être mesurée dans les deux modes avant d'être uti
 ## Composition patterns
 
 - **Mise en page (`AppLayout`) :**
-  - un en tête de 56 px, avec ☰ (sur téléphone), le logo et « Admin », le bouton de thème, et quand la session est ouverte l'email de l'admin et « Se déconnecter » ;
+  - un en tête de 56 px, avec ☰ (sur téléphone), le texte « Noli », le bouton de thème, et quand la session est ouverte l'email de l'admin et « Se déconnecter » ;
   - un menu latéral de 240 px, replié derrière ☰ sous 768 px ;
   - un contenu principal `main#contenu`.
 - **Une page :**

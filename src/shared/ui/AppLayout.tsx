@@ -89,15 +89,8 @@ export function AppLayout() {
               aria-controls={NAVBAR_ID}
             />
             <Link to="/" className={classes.brand}>
-              <img
-                src="/noli-logo.png"
-                width={28}
-                height={28}
-                alt=""
-                className={classes.brandLogo}
-              />
-              <Text ff="heading" fw={800} fz="lg">
-                Admin
+              <Text ff="heading" fw={800} fz="xl">
+                Noli
               </Text>
             </Link>
           </Group>
