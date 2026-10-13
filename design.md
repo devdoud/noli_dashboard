@@ -70,7 +70,7 @@ Un écran n'utilise que Mantine et les composants de `src/shared/ui/`. Une coule
 
 ## Contrastes mesurés (AC-4)
 
-Mesurés le 2026-10-13 dans Chromium, sur `/dev/composants` (puis `/` pour le menu), avec les fonds semi transparents composés.
+Mesurés le 2026-10-13 dans Chromium, sur `/dev/composants` (puis `/` pour le menu), avec les fonds semi transparents composés. Les textes de contenu reposent sur la surface (`#13141B` en sombre, blanc en clair), pas sur le fond de page.
 
 | Élément | Clair | Sombre |
 |---|---|---|
@@ -81,17 +81,17 @@ Mesurés le 2026-10-13 dans Chromium, sur `/dev/composants` (puis `/` pour le me
 | Bouton secondaire | 19,55:1 | 16,76:1 |
 | Bouton indigo (texte blanc) | 4,86:1 | 4,86:1 |
 | Bouton danger (texte blanc sur rouge 8) | 5,92:1 | 5,92:1 |
-| Lien, lien de tableau | 5,55:1 | 9,64:1 |
+| Lien, lien de tableau | 5,94:1 | 9,06:1 |
 | Badge Premium | 5,00:1 | 11,93:1 |
-| Résumé de pagination | 5,96:1 | 7,88:1 |
+| Résumé de pagination | 6,38:1 | 7,41:1 |
 | Titre de l'alerte d'erreur, bouton Réessayer | 6,21:1 | 13,43:1 |
 | Message de l'alerte | 14,51:1 | 15,15:1 |
-| Message d'erreur sous un champ | 5,53:1 | 6,08:1 |
+| Message d'erreur sous un champ | 5,92:1 | 5,71:1 |
 | Entrée de menu active | 5,00:1 | 11,93:1 |
-| Libellé de champ | 17,16:1 | 18,54:1 |
-| Bordure de champ (min 3:1) | 3,07:1 | 3,90:1 |
+| Libellé de champ | 18,36:1 | 17,42:1 |
+| Bordure de champ (min 3:1) | 3,29:1 | 3,67:1 |
 
-Toute nouvelle couleur doit être mesurée dans les deux modes avant d'être utilisée. Les accents les plus fragiles sont la bordure de champ en clair (3,07:1) et le texte blanc sur indigo (4,86:1) : ne pas les éclaircir.
+Toute nouvelle couleur doit être mesurée dans les deux modes avant d'être utilisée. Les accents les plus fragiles sont la bordure de champ en clair (3,29:1) et le texte blanc sur indigo (4,86:1) : ne pas les éclaircir.
 
 ## Typographie
 

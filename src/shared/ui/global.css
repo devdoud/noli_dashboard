@@ -51,6 +51,27 @@
 }
 
 /*
+ * Surfaces (spec 0003, table « Rôles par mode ») : cartes, menu, en tête, boîtes de dialogue,
+ * menus déroulants et champs se détachent du fond de page (#13141B en sombre, #FFFFFF en clair).
+ * Mantine les peint par défaut avec la couleur de fond de page.
+ */
+.mantine-Paper-root,
+.mantine-AppShell-navbar,
+.mantine-AppShell-header {
+  background-color: var(--noli-color-surface);
+}
+
+/* Par la variable de Mantine : un champ désactivé garde son fond grisé. */
+.mantine-Input-input {
+  --input-bg: var(--noli-color-surface);
+}
+
+/* Surface relevée : en tête de tableau. */
+.mantine-Table-thead {
+  background-color: var(--noli-color-surface-raised);
+}
+
+/*
  * Les bordures qui identifient un contrôle (champ, case à cocher, bouton radio) atteignent 3:1 ;
  * les séparateurs décoratifs (cartes, lignes de tableau, menu) restent discrets.
  * Un champ en erreur garde sa bordure rouge (sélecteur [data-error] de Mantine, plus spécifique).
