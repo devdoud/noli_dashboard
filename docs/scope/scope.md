@@ -89,12 +89,12 @@ Créer, modifier et supprimer une série, et régler l'accès premium (série pa
 - [x] Design it (spec): `/architect fiche série`
 - [ ] Build it: `/develop fiche série`
    - [ ] Prérequis backend : la réponse admin garde les catégories masquées, API redéployée (AC-9)
-   - [ ] Fiche et modification : lien depuis la liste, aperçu, formulaire, catégories, langues, pays, accès, erreurs (AC-1, AC-3, AC-5 à AC-11, AC-14)
-   - [ ] Création et protections : page de création, changements non enregistrés, suppression, accessibilité (AC-2 à AC-4, AC-12, AC-13, AC-15)
+   - [x] Fiche et modification : lien depuis la liste, aperçu, formulaire, catégories, langues, pays, accès, erreurs (AC-1, AC-3, AC-5 à AC-11, AC-14)
+   - [x] Création et protections : page de création, changements non enregistrés, suppression, accessibilité (AC-2 à AC-4, AC-12, AC-13, AC-15)
    - [ ] Mise en ligne sur `admin.nollli.com`, contrôle en lecture seule (AC-16)
 - [ ] Verify it: `/check verify fiche série`
 - [ ] Test it: `/test fiche série`
-Spec [0005](../specs/0005-fiche-serie/index.md)
+Spec [0005](../specs/0005-fiche-serie/index.md) · code in `src/features/series/` (et `noli-backend`, branche `feat/admin-hidden-categories`)
 
 ## Slice 3: Épisodes
 
