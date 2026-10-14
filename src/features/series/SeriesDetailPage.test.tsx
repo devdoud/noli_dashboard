@@ -402,3 +402,47 @@ describe('suppression (AC-13)', { timeout: 45_000 }, () => {
     expect(within(dialog).getByRole('textbox')).toHaveValue('Le Secret du Docteur Mensah')
   })
 })
+
+describe('pastilles de catégories (AC-9, AC-15)', { timeout: 45_000 }, () => {
+  const seriesWithHidden = () =>
+    makeAdminSeries({
+      categories: [
+        { _id: 'c1', name: 'Drame', slug: 'drame', isVisible: true },
+        { _id: 'c9', name: 'Bientôt', slug: 'bientot', isVisible: false },
+      ],
+    })
+
+  it('affiche les noms dès le chargement de la fiche, avant la liste des catégories', async () => {
+    const release: { resolve?: () => void } = {}
+    server.use(
+      adminSeriesHandler(seriesWithHidden()),
+      http.get(`${API}/categories/all`, async () => {
+        await new Promise<void>((resolve) => {
+          release.resolve = resolve
+        })
+        return HttpResponse.json({ categories: [] })
+      }),
+    )
+    renderRoutes(routes, DETAIL_PATH)
+    await waitForForm()
+
+    expect(screen.getAllByText('Drame').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Bientôt (masquée)').length).toBeGreaterThan(0)
+    expect(screen.queryByText('c1')).not.toBeInTheDocument()
+    release.resolve?.()
+  })
+
+  it('nomme chaque bouton de retrait de catégorie', async () => {
+    renderDetail(seriesWithHidden())
+    await waitForForm()
+
+    // Mantine cache ces boutons aux lecteurs d'écran (retrait au clavier par Retour arrière) ;
+    // ils portent quand même un nom, comme les pastilles de langue.
+    await waitFor(() => {
+      const names = [...document.querySelectorAll('.mantine-Pill-remove')].map((button) =>
+        button.getAttribute('aria-label'),
+      )
+      expect(names).toEqual(['Retirer Drame', 'Retirer Bientôt (masquée)', 'Retirer Français'])
+    })
+  })
+})

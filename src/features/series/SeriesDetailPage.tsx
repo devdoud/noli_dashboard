@@ -99,6 +99,7 @@ function SeriesDetailContent({
           onGuardChange={setGuardActive}
           listPath={listPath}
           onLeaveGone={guard.allowLeave}
+          knownCategories={series.categories}
         />
         <Paper
           withBorder
