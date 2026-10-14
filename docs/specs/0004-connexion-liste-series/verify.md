@@ -25,6 +25,7 @@ En local : `npm run dev` avec l'API locale (`VITE_API_BASE_URL=http://localhost:
 - [x] Ouvrir `/series?page=abc`, `?page=0`, `?page=99999` → page 1 → AC-9
 - [x] Ouvrir `/series?page=99` → l'adresse devient la dernière page, sans état vide visible, sans entrée d'historique en plus → AC-9 (valeur : dernière page)
 - [x] Couper le réseau puis ouvrir `/series` → `ErrorState` avec « Réessayer » ; rétablir puis cliquer → la liste arrive → AC-10
+- [ ] Ouvrir `/series` avec une API en erreur, puis cliquer « Réessayer » avec une réponse lente → l'erreur et « Réessayer » restent affichés (pas de squelettes) jusqu'à la réponse, puis la liste arrive → AC-10
 - [x] Base sans série → « Aucune série pour le moment » → AC-10
 - [x] Changer de page avec un réseau lent → anciennes lignes grisées jusqu'à l'arrivée des nouvelles → AC-10
 - [x] Le menu montre « Vue d'ensemble » et « Séries » ; « Séries » est active sur `/series?page=2` → AC-11
