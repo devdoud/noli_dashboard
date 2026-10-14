@@ -1,7 +1,7 @@
 # 0005. Fiche série : créer, modifier et supprimer une série
 
 **Date**: 2026-10-14
-**Status**: Proposed
+**Status**: In Progress
 
 ## Summary
 

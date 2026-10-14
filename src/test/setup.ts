@@ -33,6 +33,16 @@ class ResizeObserver {
 }
 window.ResizeObserver = ResizeObserver
 
+// Le Textarea autosize de Mantine écoute le chargement des polices (document.fonts).
+Object.defineProperty(document, 'fonts', {
+  configurable: true,
+  value: {
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    ready: Promise.resolve(),
+  },
+})
+
 // Toute requête réseau sans réponse simulée fait échouer le test.
 beforeAll(() => {
   server.listen({ onUnhandledRequest: 'error' })

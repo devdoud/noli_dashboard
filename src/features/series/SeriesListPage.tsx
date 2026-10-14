@@ -1,6 +1,7 @@
-import { Paper, VisuallyHidden } from '@mantine/core'
+import { Button, Paper, VisuallyHidden } from '@mantine/core'
+import { IconPlus } from '@tabler/icons-react'
 import { useCallback, useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { Link, useLocation, useSearchParams } from 'react-router'
 import { useSeriesPage } from '@/features/series/api'
 import { lastPage, parsePage, SERIES_PAGE_SIZE } from '@/features/series/page'
 import type { SeriesSummary } from '@/features/series/schemas'
@@ -56,6 +57,7 @@ function getRowKey(series: SeriesSummary): string {
 
 export function SeriesListPage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const location = useLocation()
   const page = parsePage(searchParams.get('page'))
   const query = useSeriesPage(page)
   const { data } = query
@@ -107,6 +109,16 @@ export function SeriesListPage() {
       <PageHeader
         title="Séries"
         description="Toutes les séries du catalogue, des plus récentes aux plus anciennes."
+        actions={
+          <Button
+            component={Link}
+            to="/series/nouvelle"
+            state={{ from: location.pathname + location.search }}
+            leftSection={<IconPlus size={16} aria-hidden="true" />}
+          >
+            Nouvelle série
+          </Button>
+        }
       />
       <VisuallyHidden aria-live="polite">{announcement}</VisuallyHidden>
       <Paper withBorder p="md">

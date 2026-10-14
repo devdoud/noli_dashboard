@@ -44,3 +44,51 @@ export const seriesPageSchema = z.object({
 
 export type SeriesSummary = z.infer<typeof seriesSummarySchema>
 export type SeriesPage = z.infer<typeof seriesPageSchema>
+
+// Réponses admin d'une série (spec 0005, « Data model sketch ») : mêmes champs tolérants, plus ceux
+// de la fiche. Les catégories masquées y figurent avec isVisible (prérequis backend) ; les épisodes,
+// non déclarés, sont retirés par Zod et ne restent pas dans le cache.
+export const adminSeriesSchema = seriesSummarySchema.extend({
+  categories: z
+    .array(
+      z.object({
+        _id: z.string(),
+        name: z.string(),
+        isVisible: z
+          .boolean()
+          .nullish()
+          .transform((value) => value ?? true),
+      }),
+    )
+    .nullish()
+    .transform((value) => value ?? []),
+  description: z.string().nullish(),
+  country: z.string().nullish(),
+  bannerImage: z.string().nullish(),
+  languages: z
+    .array(z.string())
+    .nullish()
+    .transform((value) => value ?? []),
+  releaseYear: z.number().nullish(),
+  createdAt: z.string().nullish(),
+})
+
+export const adminSeriesResponseSchema = z.object({ series: adminSeriesSchema })
+
+export const deleteSeriesResponseSchema = z.object({ message: z.string().optional() })
+
+export const allCategoriesSchema = z.object({
+  categories: z.array(
+    z.object({
+      _id: z.string(),
+      name: z.string(),
+      isVisible: z
+        .boolean()
+        .nullish()
+        .transform((value) => value ?? true),
+    }),
+  ),
+})
+
+export type AdminSeries = z.infer<typeof adminSeriesSchema>
+export type CategoryOption = z.infer<typeof allCategoriesSchema>['categories'][number]
