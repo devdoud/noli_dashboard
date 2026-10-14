@@ -18,6 +18,7 @@ import { PageHeader } from '@/shared/ui/PageHeader'
 import { TableSkeleton } from '@/shared/ui/TableSkeleton'
 import { COLOR_SCHEME_STORAGE_KEY } from '@/shared/ui/theme'
 import { renderRoutes, renderWithProviders } from '@/test/render'
+import { signInForTests } from '@/test/session'
 
 interface Row {
   readonly id: string
@@ -175,12 +176,17 @@ describe('notifySuccess (AC-10)', () => {
 })
 
 describe('AppLayout (AC-5, AC-6, AC-7)', () => {
+  // Les pages sous AppLayout exigent une session depuis la spec 0004 (AC-5).
+  beforeEach(() => {
+    signInForTests()
+  })
+
   it('ne montre que les entrées prêtes et marque la page courante', async () => {
     renderRoutes(routes)
 
     const nav = await screen.findByRole('navigation', { name: 'Menu principal' })
     const links = nav.querySelectorAll('a')
-    expect([...links].map((link) => link.textContent)).toEqual(["Vue d'ensemble"])
+    expect([...links].map((link) => link.textContent)).toEqual(["Vue d'ensemble", 'Séries'])
     expect(screen.getByRole('link', { name: "Vue d'ensemble" })).toHaveAttribute(
       'aria-current',
       'page',
@@ -188,18 +194,16 @@ describe('AppLayout (AC-5, AC-6, AC-7)', () => {
   })
 
   it('n’affiche rien de la session tant qu’elle n’est pas ouverte', async () => {
+    setSessionState({ status: 'restoring' })
     renderRoutes(routes)
 
-    await screen.findByRole('navigation', { name: 'Menu principal' })
+    expect(await screen.findByRole('status')).toHaveTextContent('Chargement…')
     expect(getSessionState().status).toBe('restoring')
+    expect(screen.queryByRole('navigation', { name: 'Menu principal' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Se déconnecter' })).not.toBeInTheDocument()
   })
 
   it('montre l’admin connecté et le déconnecte', async () => {
-    setSessionState({
-      status: 'authenticated',
-      user: { id: 'u1', email: 'admin@noli.test', username: 'admin', role: 'admin' },
-    })
     renderRoutes(routes)
 
     expect(await screen.findByText('admin@noli.test')).toBeInTheDocument()
@@ -370,18 +374,25 @@ describe('menu (AC-6)', () => {
       'Catégories',
       'Outils',
     ])
-    expect(visibleNavItems().map((item) => item.to)).toEqual(['/'])
+    expect(visibleNavItems().map((item) => item.to)).toEqual(['/', '/series'])
   })
 
   it('montre une entrée dès qu’elle passe à ready', () => {
-    const items = navItems.map((item) => (item.to === '/series' ? { ...item, ready: true } : item))
+    const items = navItems.map((item) =>
+      item.to === '/categories' ? { ...item, ready: true } : item,
+    )
 
-    expect(visibleNavItems(items).map((item) => item.label)).toEqual(["Vue d'ensemble", 'Séries'])
+    expect(visibleNavItems(items).map((item) => item.label)).toEqual([
+      "Vue d'ensemble",
+      'Séries',
+      'Catégories',
+    ])
   })
 })
 
 describe('vitrine (AC-13)', () => {
   it('se charge à la demande sur /dev/composants en développement', async () => {
+    signInForTests()
     renderRoutes(routes, '/dev/composants')
 
     expect(

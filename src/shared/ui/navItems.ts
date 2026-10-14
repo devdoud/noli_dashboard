@@ -20,7 +20,7 @@ export interface NavItem {
 
 export const navItems: readonly NavItem[] = [
   { label: "Vue d'ensemble", to: '/', icon: IconLayoutDashboard, ready: true },
-  { label: 'Séries', to: '/series', icon: IconMovie, ready: false },
+  { label: 'Séries', to: '/series', icon: IconMovie, ready: true },
   { label: 'Catégories', to: '/categories', icon: IconCategory, ready: false },
   { label: 'Outils', to: '/outils', icon: IconTool, ready: false },
 ]
