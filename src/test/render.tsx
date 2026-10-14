@@ -11,7 +11,8 @@ export function renderWithProviders(ui: ReactNode) {
 }
 
 // Rend des routes avec les fournisseurs de l'application, sur une URL de départ.
+// Le routeur renvoyé permet de lire l'adresse courante et l'historique.
 export function renderRoutes(routes: RouteObject[], initialPath = '/') {
   const router = createMemoryRouter(routes, { initialEntries: [initialPath] })
-  return renderWithProviders(<RouterProvider router={router} />)
+  return { router, ...renderWithProviders(<RouterProvider router={router} />) }
 }

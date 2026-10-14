@@ -1,8 +1,18 @@
 import { screen } from '@testing-library/react'
 import { routes } from '@/app/routes'
+import { resetSessionForTests } from '@/shared/session/session'
 import { renderRoutes } from '@/test/render'
+import { signInForTests } from '@/test/session'
 
 describe('coquille de l’application', () => {
+  beforeEach(() => {
+    signInForTests()
+  })
+
+  afterEach(() => {
+    resetSessionForTests()
+  })
+
   it('affiche la vue d’ensemble dans la mise en page (AC-5, AC-12)', async () => {
     renderRoutes(routes)
 

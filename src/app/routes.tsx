@@ -1,6 +1,9 @@
 import type { RouteObject } from 'react-router'
 import { HomePage } from '@/app/HomePage'
 import { NotFoundPage } from '@/app/NotFoundPage'
+import { LoginPage } from '@/features/auth/LoginPage'
+import { SeriesListPage } from '@/features/series/SeriesListPage'
+import { RequireSession } from '@/shared/session/RequireSession'
 import { AppLayout } from '@/shared/ui/AppLayout'
 
 // Vitrine des composants : chargée à la demande et retirée du build de production (spec 0003, AC-13).
@@ -16,13 +19,21 @@ const devRoutes: RouteObject[] = import.meta.env.DEV
     ]
   : []
 
+// /connexion est publique ; tout le reste passe par la garde de session (spec 0004, AC-5).
 export const routes: RouteObject[] = [
+  { path: 'connexion', element: <LoginPage /> },
   {
-    element: <AppLayout />,
+    element: <RequireSession />,
     children: [
-      { index: true, element: <HomePage /> },
-      ...devRoutes,
-      { path: '*', element: <NotFoundPage /> },
+      {
+        element: <AppLayout />,
+        children: [
+          { index: true, element: <HomePage /> },
+          { path: 'series', element: <SeriesListPage /> },
+          ...devRoutes,
+          { path: '*', element: <NotFoundPage /> },
+        ],
+      },
     ],
   },
 ]
