@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { routes } from '@/app/routes'
 import { API, seriesHandler } from '@/test/seriesApi'
-import { SESSION_EXPIRED_MESSAGE } from '@/shared/api/messages'
+import { SESSION_EXPIRED_MESSAGE, SESSION_FORBIDDEN_MESSAGE } from '@/shared/api/messages'
 import { resetSessionForTests } from '@/shared/session/session'
 import { getSessionState, setSessionState } from '@/shared/session/store'
 import { renderRoutes } from '@/test/render'
@@ -286,5 +286,148 @@ describe('garde et fin de session (AC-5, AC-6)', { timeout: 15_000 }, () => {
     expect(await screen.findByText(SESSION_EXPIRED_MESSAGE)).toBeInTheDocument()
     expect(router.state.location.pathname).toBe('/connexion')
     expect(screen.queryByRole('button', { name: 'Réessayer' })).not.toBeInTheDocument()
+  })
+})
+
+describe('fin de session refusée (AC-6)', { timeout: 15_000 }, () => {
+  it('affiche le message d’accès retiré et garde l’adresse de retour', async () => {
+    setSessionState({
+      status: 'anonymous',
+      endReason: 'forbidden',
+      endMessage: SESSION_FORBIDDEN_MESSAGE,
+    })
+    const { router } = renderRoutes(routes, '/series?page=3')
+
+    expect(await screen.findByRole('status')).toHaveTextContent(SESSION_FORBIDDEN_MESSAGE)
+    expect(currentPath(router)).toBe(`/connexion?retour=${encodeURIComponent('/series?page=3')}`)
+  })
+
+  it('masque le message dès un envoi invalide, sans appeler l’API', async () => {
+    setSessionState({
+      status: 'anonymous',
+      endReason: 'expired',
+      endMessage: SESSION_EXPIRED_MESSAGE,
+    })
+    const calls: LoginBody[] = []
+    server.use(loginHandler('admin', calls))
+    renderRoutes(routes, '/connexion')
+    await screen.findByText(SESSION_EXPIRED_MESSAGE)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Se connecter' }))
+
+    expect(screen.queryByText(SESSION_EXPIRED_MESSAGE)).not.toBeInTheDocument()
+    expect(calls).toHaveLength(0)
+  })
+})
+
+describe('erreurs de connexion, cas restants (AC-4)', { timeout: 15_000 }, () => {
+  it('annonce une erreur réseau dans la carte', async () => {
+    server.use(http.post(`${API}/auth/login`, () => HttpResponse.error()))
+    renderRoutes(routes, '/connexion')
+    await screen.findByLabelText('Email')
+
+    await fillAndSubmit()
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Impossible de joindre le serveur. Vérifiez votre connexion, puis réessayez.',
+    )
+    expect(getSessionState().status).toBe('anonymous')
+  })
+
+  it('refuse un compte non admin signalé par un 403 de l’API', async () => {
+    server.use(
+      http.post(`${API}/auth/login`, () =>
+        HttpResponse.json({ message: 'Forbidden' }, { status: 403 }),
+      ),
+    )
+    renderRoutes(routes, '/connexion')
+    await screen.findByLabelText('Email')
+
+    await fillAndSubmit()
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      "Ce compte n'a pas accès au tableau de bord.",
+    )
+  })
+
+  it('efface l’erreur précédente pendant un nouvel envoi', async () => {
+    const release: { resolve?: () => void } = {}
+    const attempts = { count: 0 }
+    server.use(
+      http.post(`${API}/auth/login`, async () => {
+        attempts.count += 1
+        if (attempts.count === 2) {
+          await new Promise<void>((resolve) => {
+            release.resolve = resolve
+          })
+        }
+        return HttpResponse.json({ message: 'Invalid credentials' }, { status: 401 })
+      }),
+    )
+    renderRoutes(routes, '/connexion')
+    await screen.findByLabelText('Email')
+    await fillAndSubmit()
+    await screen.findByRole('alert')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Se connecter' }))
+
+    await screen.findByRole('button', { name: 'Connexion en cours' })
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    release.resolve?.()
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+  })
+})
+
+describe('sécurité du mot de passe', { timeout: 15_000 }, () => {
+  it('ne garde le mot de passe ni dans le stockage ni dans la console', async () => {
+    const consoleCalls: unknown[][] = []
+    const spies = (['log', 'info', 'warn', 'error', 'debug'] as const).map((method) =>
+      vi.spyOn(console, method).mockImplementation((...args: unknown[]) => {
+        consoleCalls.push(args)
+      }),
+    )
+    server.use(loginHandler(), seriesHandler(0))
+    renderRoutes(routes, '/connexion')
+    await screen.findByLabelText('Email')
+
+    await fillAndSubmit('admin@noli.test', 'MotDePasseUnique42')
+    await screen.findByRole('heading', { level: 1, name: 'Séries' })
+
+    const stored = [window.sessionStorage, window.localStorage]
+      .flatMap((storage) => Object.keys(storage).map((key) => storage.getItem(key) ?? ''))
+      .join(' ')
+    expect(stored).not.toContain('MotDePasseUnique42')
+    expect(JSON.stringify(consoleCalls)).not.toContain('MotDePasseUnique42')
+    spies.forEach((spy) => {
+      spy.mockRestore()
+    })
+  })
+})
+
+describe('accessibilité du formulaire (AC-1, AC-2)', { timeout: 15_000 }, () => {
+  it('relie chaque message d’erreur à son champ', async () => {
+    renderRoutes(routes, '/connexion')
+    const email = await screen.findByLabelText('Email')
+
+    await fillAndSubmit('pas-un-email', '')
+
+    expect(email).toHaveAttribute('aria-invalid', 'true')
+    expect(email).toHaveAccessibleDescription('Adresse email invalide.')
+    expect(screen.getByLabelText('Mot de passe')).toHaveAccessibleDescription(
+      'Mot de passe requis.',
+    )
+  })
+
+  it('suit l’ordre Email, bouton de l’œil, Mot de passe, Se connecter au clavier', async () => {
+    renderRoutes(routes, '/connexion')
+    const email = await screen.findByLabelText('Email')
+    expect(email).toHaveFocus()
+
+    await userEvent.tab()
+    expect(screen.getByLabelText('Mot de passe')).toHaveFocus()
+    await userEvent.tab()
+    expect(screen.getByRole('button', { name: 'Afficher le mot de passe' })).toHaveFocus()
+    await userEvent.tab()
+    expect(screen.getByRole('button', { name: 'Se connecter' })).toHaveFocus()
   })
 })

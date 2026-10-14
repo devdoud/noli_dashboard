@@ -1,7 +1,9 @@
 // Cellules de la liste des séries (spec 0004, AC-8, table « Colonnes »).
-import { Badge, Box, Group, Image, Text } from '@mantine/core'
+import { Anchor, Badge, Box, Group, Image, Text } from '@mantine/core'
 import { IconPhoto } from '@tabler/icons-react'
 import { useState, type CSSProperties } from 'react'
+import { Link, useLocation } from 'react-router'
+import { seriesPath } from '@/features/series/navigation'
 import type { SeriesSummary } from '@/features/series/schemas'
 import { formatRating, freeEpisodesLabel, statusLabel } from '@/features/series/seriesFormat'
 import { formatDate, MISSING_VALUE } from '@/shared/ui/format'
@@ -13,15 +15,26 @@ const COVER_HEIGHT = 60
 const NO_WRAP: CSSProperties = { whiteSpace: 'nowrap', flexShrink: 0 }
 const BADGE_STYLE: CSSProperties = { flexShrink: 0, minWidth: 'max-content' }
 
-function CoverThumbnail({ src }: { readonly src: string | null | undefined }) {
+interface CoverThumbnailProps {
+  readonly src: string | null | undefined
+  readonly width?: number
+  readonly height?: number
+}
+
+/** Couverture en 2:3, ou le bloc par défaut si elle manque ou ne se charge pas. */
+export function CoverThumbnail({
+  src,
+  width = COVER_WIDTH,
+  height = COVER_HEIGHT,
+}: CoverThumbnailProps) {
   // Une image qui ne se charge pas affiche le même bloc qu'une couverture absente.
   const [failed, setFailed] = useState(false)
   if (failed || src === undefined || src === null || src.trim() === '') {
     return (
       <Box
         data-testid="couverture-absente"
-        w={COVER_WIDTH}
-        h={COVER_HEIGHT}
+        w={width}
+        h={height}
         bg="var(--noli-color-surface-raised)"
         style={{
           borderRadius: 'var(--mantine-radius-sm)',
@@ -31,7 +44,11 @@ function CoverThumbnail({ src }: { readonly src: string | null | undefined }) {
           flexShrink: 0,
         }}
       >
-        <IconPhoto size={18} aria-hidden="true" color="var(--mantine-color-dimmed)" />
+        <IconPhoto
+          size={Math.round(width * 0.45)}
+          aria-hidden="true"
+          color="var(--mantine-color-dimmed)"
+        />
       </Box>
     )
   }
@@ -40,8 +57,8 @@ function CoverThumbnail({ src }: { readonly src: string | null | undefined }) {
       src={src}
       alt=""
       loading="lazy"
-      w={COVER_WIDTH}
-      h={COVER_HEIGHT}
+      w={width}
+      h={height}
       fit="cover"
       radius="sm"
       bg="var(--noli-color-surface-raised)"
@@ -54,12 +71,20 @@ function CoverThumbnail({ src }: { readonly src: string | null | undefined }) {
 }
 
 export function TitleCell({ series }: { readonly series: SeriesSummary }) {
+  const { pathname, search } = useLocation()
+  // Un seul lien par ligne, sur le titre ; la fiche sait revenir à cette page (spec 0005, AC-1).
   return (
     <Group gap="sm" wrap="nowrap">
       <CoverThumbnail src={series.coverImage} />
-      <Text fw={600} size="sm">
+      <Anchor
+        component={Link}
+        to={seriesPath(series._id)}
+        state={{ from: pathname + search }}
+        fw={600}
+        size="sm"
+      >
         {series.title}
-      </Text>
+      </Anchor>
     </Group>
   )
 }

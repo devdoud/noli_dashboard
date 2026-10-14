@@ -56,3 +56,50 @@ export function seriesHandler(
     return HttpResponse.json({ message: 'ok', data: { total, page, limit, series } })
   })
 }
+
+// Fiche admin d'une série et catégories (spec 0005).
+
+export const SERIES_ID = '6ac0e7848db827737b2141dc'
+
+export const ALL_CATEGORIES = [
+  { _id: 'c1', name: 'Drame', slug: 'drame', isVisible: true },
+  { _id: 'c2', name: 'Thriller', slug: 'thriller', isVisible: true },
+  { _id: 'c9', name: 'Bientôt', slug: 'bientot', isVisible: false },
+]
+
+export function makeAdminSeries(overrides: Partial<RawSeries> = {}): RawSeries {
+  return {
+    ...makeSeries(1),
+    _id: SERIES_ID,
+    title: 'Le Secret du Docteur Mensah',
+    description: 'Un médecin respecté cache un passé.',
+    categories: [{ _id: 'c1', name: 'Drame', slug: 'drame', isVisible: true }],
+    status: 'ongoing',
+    languages: ['fr'],
+    country: 'Bénin',
+    releaseYear: 2025,
+    isPremium: true,
+    freeEpisodeCount: 3,
+    totalEpisodes: 8,
+    rating: 8.6,
+    votes: 268,
+    createdAt: '2026-10-03T12:31:00.000Z',
+    updatedAt: '2026-10-14T15:12:00.000Z',
+    episodes: [{ seasonNumber: 1, episodeNumber: 1, title: 'Épisode 1' }],
+    ...overrides,
+  }
+}
+
+export function categoriesHandler() {
+  return http.get(`${API}/categories/all`, () =>
+    HttpResponse.json({ message: 'ok', categories: ALL_CATEGORIES }),
+  )
+}
+
+export function adminSeriesHandler(series: RawSeries = makeAdminSeries()) {
+  return http.get(`${API}/series/:id/admin`, ({ params }) =>
+    params.id === series._id
+      ? HttpResponse.json({ message: 'ok', series })
+      : HttpResponse.json({ message: 'Series not found' }, { status: 404 }),
+  )
+}

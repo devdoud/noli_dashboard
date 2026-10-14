@@ -1,6 +1,7 @@
-import { Paper, VisuallyHidden } from '@mantine/core'
-import { useCallback, useEffect } from 'react'
-import { useSearchParams } from 'react-router'
+import { Button, Paper, VisuallyHidden } from '@mantine/core'
+import { IconPlus } from '@tabler/icons-react'
+import { useCallback, useEffect, useState } from 'react'
+import { Link, useLocation, useSearchParams } from 'react-router'
 import { useSeriesPage } from '@/features/series/api'
 import { lastPage, parsePage, SERIES_PAGE_SIZE } from '@/features/series/page'
 import type { SeriesSummary } from '@/features/series/schemas'
@@ -56,10 +57,26 @@ function getRowKey(series: SeriesSummary): string {
 
 export function SeriesListPage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const location = useLocation()
   const page = parsePage(searchParams.get('page'))
   const query = useSeriesPage(page)
   const { data } = query
   const total = data?.data.total ?? 0
+
+  // Sans données encore chargées, TanStack Query efface l'erreur au début d'un nouvel essai.
+  // La page garde l'erreur affichée jusqu'à la réponse (spec 0004, « error est prioritaire »).
+  const [retrying, setRetrying] = useState<{ readonly page: number; readonly error: unknown }>()
+  const retry = useCallback(() => {
+    setRetrying({ page, error: query.error })
+    void query.refetch().finally(() => {
+      setRetrying(undefined)
+    })
+  }, [page, query])
+  const shownError =
+    query.error ??
+    (retrying !== undefined && retrying.page === page && query.isFetching
+      ? retrying.error
+      : undefined)
 
   // Page au delà de la fin (adresse ancienne ou modifiée à la main) : on remplace l'adresse
   // par la dernière page, sans entrée d'historique et sans montrer l'état vide (AC-9).
@@ -92,6 +109,16 @@ export function SeriesListPage() {
       <PageHeader
         title="Séries"
         description="Toutes les séries du catalogue, des plus récentes aux plus anciennes."
+        actions={
+          <Button
+            component={Link}
+            to="/series/nouvelle"
+            state={{ from: location.pathname + location.search }}
+            leftSection={<IconPlus size={16} aria-hidden="true" />}
+          >
+            Nouvelle série
+          </Button>
+        }
       />
       <VisuallyHidden aria-live="polite">{announcement}</VisuallyHidden>
       <Paper withBorder p="md">
@@ -106,8 +133,8 @@ export function SeriesListPage() {
           pageSize={SERIES_PAGE_SIZE}
           onPageChange={onPageChange}
           isLoading={query.isFetching || emptyBeyondEnd}
-          error={query.error ?? undefined}
-          onRetry={() => void query.refetch()}
+          error={shownError ?? undefined}
+          onRetry={retry}
           empty={{
             title: 'Aucune série pour le moment',
             description: "Les séries créées dans le dashboard ou par l'API apparaîtront ici.",
