@@ -93,7 +93,7 @@ Créer, modifier et supprimer une série, et régler l'accès premium (série pa
    - [x] Création et protections : page de création, changements non enregistrés, suppression, accessibilité (AC-2 à AC-4, AC-12, AC-13, AC-15)
    - [x] Mise en ligne sur `admin.nollli.com`, contrôle en lecture seule (AC-16)
 - [x] Verify it: `/check verify fiche série`
-- [ ] Test it: `/test fiche série`
+- [x] Test it: `/test fiche série`
 Spec [0005](../specs/0005-fiche-serie/index.md) · code in `src/features/series/` (et `noli-backend`, `src/series/content-access.ts`)
 
 ## Slice 3: Épisodes
