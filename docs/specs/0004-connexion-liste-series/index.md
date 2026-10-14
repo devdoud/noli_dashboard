@@ -1,7 +1,7 @@
 # 0004. Connexion admin et liste des séries
 
 **Date**: 2026-10-14
-**Status**: In Progress
+**Status**: Accepted
 
 ## Summary
 

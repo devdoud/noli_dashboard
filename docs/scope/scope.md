@@ -15,7 +15,7 @@ _Ce sont des recommandations pour garder une construction ordonnée, pas des obl
 | 2 | Coding standards & tooling | Foundation | done |
 | 3 | Client API & erreurs | Foundation | done |
 | 4 | Design system & UI foundation | Foundation | done |
-| 5 | Connexion admin et liste des séries | Slice 1 | in-progress |
+| 5 | Connexion admin et liste des séries | Slice 1 | done |
 | 6 | Fiche série | Slice 2 | planned |
 | 7 | Épisodes | Slice 3 | planned |
 | 8 | Images | Slice 4 | planned |
@@ -68,7 +68,7 @@ Spec [0003](../specs/0003-design-system-ui-foundation/index.md) · code in `src/
 
 ## Slice 1: Connexion admin et liste des séries
 
-### 5. Connexion admin et liste des séries · in-progress
+### 5. Connexion admin et liste des séries · done
 Le premier fil complet, qui sert aussi de squelette : se connecter, vérifier le rôle admin, voir la liste paginée des séries. Il prouve que le dashboard, l'API et l'hébergement communiquent vraiment.
 **Done when:** un admin se connecte et voit la liste paginée des séries ; un compte non admin est refusé avec un message clair ; la session survit à l'expiration du token d'accès ; la déconnexion marche ; le dashboard en ligne appelle l'API de production sans blocage CORS.
 - [x] Design it (spec): `/architect connexion admin et liste des séries`
