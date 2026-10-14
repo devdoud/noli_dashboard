@@ -1,7 +1,7 @@
 # 0003. Design system et fondation de l'interface
 
 **Date**: 2026-10-13
-**Status**: In Progress
+**Status**: Accepted
 
 ## Summary
 

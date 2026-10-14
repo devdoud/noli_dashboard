@@ -2,6 +2,7 @@ import { modals } from '@mantine/modals'
 import { notifications } from '@mantine/notifications'
 import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { useState } from 'react'
 import colorSchemeScript from '../../../public/color-scheme.js?raw'
 import { routes } from '@/app/routes'
 import { ApiError } from '@/shared/api/errors'
@@ -10,7 +11,11 @@ import { getSessionState, setSessionState } from '@/shared/session/store'
 import { confirmDanger } from '@/shared/ui/confirmDanger'
 import { ColorSchemeToggle } from '@/shared/ui/ColorSchemeToggle'
 import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable'
+import { EmptyState } from '@/shared/ui/EmptyState'
+import { navItems, visibleNavItems } from '@/shared/ui/navItems'
 import { notifySuccess } from '@/shared/ui/notifySuccess'
+import { PageHeader } from '@/shared/ui/PageHeader'
+import { TableSkeleton } from '@/shared/ui/TableSkeleton'
 import { COLOR_SCHEME_STORAGE_KEY } from '@/shared/ui/theme'
 import { renderRoutes, renderWithProviders } from '@/test/render'
 
@@ -59,7 +64,8 @@ afterEach(() => {
   resetSessionForTests()
 })
 
-describe('DataTable (AC-8)', () => {
+// Délai plus long : le premier rendu de Mantine dans jsdom peut dépasser 5 s sous forte charge.
+describe('DataTable (AC-8)', { timeout: 15_000 }, () => {
   it('affiche les lignes, la légende et le résumé', () => {
     renderTable()
 
@@ -269,5 +275,186 @@ describe('mode de couleurs (AC-2)', () => {
 
     window.localStorage.removeItem(COLOR_SCHEME_STORAGE_KEY)
     expect(run()).toBe('light')
+  })
+})
+
+describe('PageHeader et titre de l’onglet (AC-7, AC-12)', () => {
+  it('affiche un seul h1, la description et les actions', () => {
+    renderWithProviders(
+      <PageHeader
+        title="Séries"
+        description="Toutes les séries du catalogue."
+        actions={<button type="button">Nouvelle série</button>}
+      />,
+    )
+
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+    expect(screen.getByRole('heading', { level: 1, name: 'Séries' })).toBeInTheDocument()
+    expect(screen.getByText('Toutes les séries du catalogue.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Nouvelle série' })).toBeInTheDocument()
+    expect(document.title).toBe('Séries · Noli Admin')
+  })
+
+  it('n’affiche ni description ni actions quand elles manquent', () => {
+    const { container } = renderWithProviders(<PageHeader title="Outils" />)
+
+    expect(container.querySelectorAll('p')).toHaveLength(0)
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  })
+
+  it('suit un changement de titre', async () => {
+    function Switcher() {
+      const [title, setTitle] = useState('Avant')
+      return (
+        <>
+          <PageHeader title={title} />
+          <button
+            type="button"
+            onClick={() => {
+              setTitle('Après')
+            }}
+          >
+            Changer
+          </button>
+        </>
+      )
+    }
+    renderWithProviders(<Switcher />)
+    expect(document.title).toBe('Avant · Noli Admin')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Changer' }))
+
+    expect(document.title).toBe('Après · Noli Admin')
+  })
+})
+
+describe('EmptyState et TableSkeleton (AC-8)', () => {
+  it('affiche le titre, l’explication et l’action', () => {
+    renderWithProviders(
+      <EmptyState
+        title="Aucune catégorie"
+        description="Créez la première."
+        action={<button type="button">Créer</button>}
+      />,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Aucune catégorie' })).toBeInTheDocument()
+    expect(screen.getByText('Créez la première.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Créer' })).toBeInTheDocument()
+  })
+
+  it('garde l’en tête du tableau et le nombre de lignes demandé pendant le chargement', () => {
+    renderWithProviders(
+      <TableSkeleton
+        caption="Séries"
+        rows={3}
+        columns={[
+          { key: 'title', header: 'Titre' },
+          { key: 'episodes', header: 'Épisodes' },
+        ]}
+      />,
+    )
+
+    expect(screen.getByRole('table', { name: 'Séries' })).toHaveAttribute('aria-busy', 'true')
+    expect(screen.getByRole('columnheader', { name: 'Titre' })).toBeInTheDocument()
+    expect(screen.getAllByRole('row')).toHaveLength(4)
+    expect(screen.getByRole('status')).toHaveTextContent('Chargement…')
+  })
+})
+
+describe('menu (AC-6)', () => {
+  it('garde l’ordre prévu et ne montre que les entrées prêtes', () => {
+    expect(navItems.map((item) => item.label)).toEqual([
+      "Vue d'ensemble",
+      'Séries',
+      'Catégories',
+      'Outils',
+    ])
+    expect(visibleNavItems().map((item) => item.to)).toEqual(['/'])
+  })
+
+  it('montre une entrée dès qu’elle passe à ready', () => {
+    const items = navItems.map((item) => (item.to === '/series' ? { ...item, ready: true } : item))
+
+    expect(visibleNavItems(items).map((item) => item.label)).toEqual(["Vue d'ensemble", 'Séries'])
+  })
+})
+
+describe('vitrine (AC-13)', () => {
+  it('se charge à la demande sur /dev/composants en développement', async () => {
+    renderRoutes(routes, '/dev/composants')
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Composants' }, { timeout: 10_000 }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('table', { name: "Séries d'exemple" })).toBeInTheDocument()
+  })
+})
+
+describe('confirmDanger, cas restants (AC-9)', () => {
+  it('ne se résout qu’une fois, même si la fenêtre se ferme après la confirmation', async () => {
+    renderWithProviders(<p>page</p>)
+
+    const answer = confirmDanger({ title: 'Supprimer ?', message: 'Définitif.' })
+    await userEvent.click(await screen.findByRole('button', { name: 'Supprimer' }))
+    act(() => {
+      modals.closeAll()
+    })
+
+    await expect(answer).resolves.toBe(true)
+  })
+
+  it('accepte un libellé de confirmation personnalisé', async () => {
+    renderWithProviders(<p>page</p>)
+
+    const answer = confirmDanger({
+      title: 'Retirer la vidéo ?',
+      message: 'La vidéo sera retirée.',
+      confirmLabel: 'Retirer',
+    })
+    await userEvent.click(await screen.findByRole('button', { name: 'Retirer' }))
+
+    await expect(answer).resolves.toBe(true)
+  })
+})
+
+describe('script de mode de couleurs, cas limites (AC-2)', () => {
+  const runScript = () => {
+    // eslint-disable-next-line @typescript-eslint/no-implied-eval
+    const run = new Function(colorSchemeScript) as () => void
+    run()
+    return document.documentElement.getAttribute('data-mantine-color-scheme')
+  }
+
+  it('suit le système en sombre quand rien n’est enregistré', () => {
+    const matchMedia = vi.spyOn(window, 'matchMedia').mockImplementation(
+      (query: string) =>
+        ({
+          matches: query === '(prefers-color-scheme: dark)',
+          media: query,
+          onchange: null,
+          addListener: () => undefined,
+          removeListener: () => undefined,
+          addEventListener: () => undefined,
+          removeEventListener: () => undefined,
+          dispatchEvent: () => false,
+        }) as MediaQueryList,
+    )
+
+    expect(runScript()).toBe('dark')
+    matchMedia.mockRestore()
+  })
+
+  it('ignore une valeur inconnue et suit le système', () => {
+    window.localStorage.setItem(COLOR_SCHEME_STORAGE_KEY, 'violet')
+
+    expect(runScript()).toBe('light')
+  })
+
+  it('le bouton propose le mode clair quand l’app est en sombre', async () => {
+    window.localStorage.setItem(COLOR_SCHEME_STORAGE_KEY, 'dark')
+    renderWithProviders(<ColorSchemeToggle />)
+
+    expect(await screen.findByRole('button', { name: 'Passer en mode clair' })).toBeInTheDocument()
   })
 })

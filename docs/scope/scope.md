@@ -14,7 +14,7 @@ _Ce sont des recommandations pour garder une construction ordonnée, pas des obl
 | 1 | Stack & architecture | Foundation | done |
 | 2 | Coding standards & tooling | Foundation | done |
 | 3 | Client API & erreurs | Foundation | done |
-| 4 | Design system & UI foundation | Foundation | in-progress |
+| 4 | Design system & UI foundation | Foundation | done |
 | 5 | Connexion admin et liste des séries | Slice 1 | planned |
 | 6 | Fiche série | Slice 2 | planned |
 | 7 | Épisodes | Slice 3 | planned |
@@ -53,7 +53,7 @@ Une seule façon d'appeler l'API pour tout le dashboard : client typé à partir
 - [x] Test it: `/test client API & erreurs`
 Spec [0002](../specs/0002-client-api-erreurs/index.md) · code in `src/shared/` (`api/`, `session/`, `query/`, `ui/`, `config/`)
 
-### 4. Design system & UI foundation · in-progress
+### 4. Design system & UI foundation · done
 Langage visuel, mise en page (menu latéral, en tête, contenu) et composants de base : tableau paginé, formulaire, boîte de confirmation, notification courte.
 **Done when:** `design.md` couvre typographie, couleurs, espacements et composants ; les composants de base gèrent le clavier et le focus ; la mise en page reste lisible sur téléphone.
 - [x] Design it (spec): `/architect design system & UI foundation`
@@ -63,7 +63,7 @@ Langage visuel, mise en page (menu latéral, en tête, contenu) et composants de
    - [x] Composants : `DataTable`, `EmptyState`, `TableSkeleton`, `confirmDanger`, `notifySuccess`, formatage (AC-8 à AC-11)
    - [x] Contrastes mesurés et `design.md` (AC-4, AC-14)
 - [x] Verify it: `/check verify design system & UI foundation`
-- [ ] Test it: `/test design system & UI foundation`
+- [x] Test it: `/test design system & UI foundation`
 Spec [0003](../specs/0003-design-system-ui-foundation/index.md) · code in `src/shared/ui/`, `src/app/` (routes, pages, `dev/`), `public/` (polices, logo, `color-scheme.js`), `design.md`
 
 ## Slice 1: Connexion admin et liste des séries
