@@ -16,7 +16,7 @@ _Ce sont des recommandations pour garder une construction ordonnée, pas des obl
 | 3 | Client API & erreurs | Foundation | done |
 | 4 | Design system & UI foundation | Foundation | done |
 | 5 | Connexion admin et liste des séries | Slice 1 | done |
-| 6 | Fiche série | Slice 2 | in-progress |
+| 6 | Fiche série | Slice 2 | done |
 | 7 | Épisodes | Slice 3 | planned |
 | 8 | Images | Slice 4 | planned |
 | 9 | Catégories | Slice 5 | planned |
@@ -83,7 +83,7 @@ Spec [0004](../specs/0004-connexion-liste-series/index.md) · code in `src/featu
 
 ## Slice 2: Fiche série
 
-### 6. Fiche série · in-progress
+### 6. Fiche série · done
 Créer, modifier et supprimer une série, et régler l'accès premium (série payante, nombre d'épisodes gratuits).
 **Done when:** un admin crée une série avec au moins une catégorie, la modifie, change ses réglages premium et la supprime après confirmation ; un titre déjà pris affiche une erreur claire.
 - [x] Design it (spec): `/architect fiche série`
