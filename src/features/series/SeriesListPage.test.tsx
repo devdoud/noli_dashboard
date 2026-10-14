@@ -281,6 +281,65 @@ describe('états (AC-10)', { timeout: 15_000 }, () => {
     expect(await screen.findByText('Série 1')).toBeInTheDocument()
   })
 
+  it('affiche la nouvelle erreur quand « Réessayer » échoue encore', async () => {
+    const attempts = { count: 0 }
+    server.use(
+      http.get(`${API}/series`, () => {
+        attempts.count += 1
+        return attempts.count === 1
+          ? HttpResponse.json({ message: 'Bad' }, { status: 400 })
+          : HttpResponse.json({ message: 'Introuvable' }, { status: 404 })
+      }),
+    )
+    renderRoutes(routes, '/series')
+    await userEvent.click(await screen.findByRole('button', { name: 'Réessayer' }))
+
+    expect(
+      await screen.findByText('Élément introuvable. Il a peut être été supprimé.'),
+    ).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Réessayer' })).toHaveLength(1)
+    expect(attempts.count).toBe(2)
+  })
+
+  it('ne remontre pas l’ancienne erreur après un essai réussi, au changement de page', async () => {
+    const release: { resolve?: () => void } = {}
+    const attempts = { count: 0 }
+    server.use(
+      http.get(`${API}/series`, async ({ request }) => {
+        attempts.count += 1
+        if (attempts.count === 1) return HttpResponse.json({ message: 'Bad' }, { status: 400 })
+        const page = Number(new URL(request.url).searchParams.get('page'))
+        if (page === 2) {
+          await new Promise<void>((resolve) => {
+            release.resolve = resolve
+          })
+        }
+        const start = (page - 1) * 20
+        return HttpResponse.json({
+          data: {
+            total: 45,
+            page,
+            limit: 20,
+            series: Array.from({ length: 20 }, (_, offset) => makeSeries(start + offset + 1)),
+          },
+        })
+      }),
+    )
+    renderRoutes(routes, '/series')
+    await userEvent.click(await screen.findByRole('button', { name: 'Réessayer' }))
+    await screen.findByText('Série 1')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Page suivante' }))
+
+    await waitFor(() => {
+      expect(release.resolve).toBeDefined()
+    })
+    expect(screen.queryByRole('button', { name: 'Réessayer' })).not.toBeInTheDocument()
+    expect(screen.getByText('Série 1')).toBeInTheDocument()
+    release.resolve?.()
+    expect(await screen.findByText('Série 21')).toBeInTheDocument()
+  })
+
   it('n’appelle l’API qu’une fois sur une erreur 4xx (pas de réessai)', async () => {
     const attempts = { count: 0 }
     server.use(

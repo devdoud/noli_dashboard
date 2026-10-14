@@ -78,7 +78,7 @@ Le premier fil complet, qui sert aussi de squelette : se connecter, vérifier le
    - [x] Liste des séries : colonnes, pagination dans l'adresse, états, entrée de menu (AC-8 à AC-11)
    - [x] Mise en ligne sur `admin.nollli.com` reliée à l'API de production (AC-12)
 - [x] Verify it: `/check verify connexion admin et liste des séries`
-- [ ] Test it: `/test connexion admin et liste des séries`
+- [x] Test it: `/test connexion admin et liste des séries`
 Spec [0004](../specs/0004-connexion-liste-series/index.md) · code in `src/features/auth/`, `src/features/series/`, `src/shared/session/RequireSession.tsx`
 
 ## Slice 2: Fiche série
