@@ -1,5 +1,7 @@
 # Blueprint Render du dashboard (site statique). Voir la spec 0001, section « Hébergement sur Render ».
 # API de production : https://api.nollli.com (autorisée dans la CSP ci dessous, connect-src).
+# Images : picsum.photos est autorisé tant que les séries de démonstration l'utilisent ;
+# à retirer quand les couvertures viendront de Cloudinary (fonctionnalité 8).
 # À FAIRE avant le premier déploiement : renseigner VITE_API_BASE_URL dans le tableau de bord
 # Render avec la même adresse.
 services:
@@ -22,7 +24,7 @@ services:
     headers:
       - path: /*
         name: Content-Security-Policy
-        value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://res.cloudinary.com blob: data:; connect-src 'self' https://api.nollli.com; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+        value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://res.cloudinary.com https://picsum.photos https://fastly.picsum.photos blob: data:; connect-src 'self' https://api.nollli.com; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
       - path: /*
         name: X-Frame-Options
         value: DENY
