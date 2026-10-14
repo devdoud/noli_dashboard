@@ -16,7 +16,7 @@ _Ce sont des recommandations pour garder une construction ordonnée, pas des obl
 | 3 | Client API & erreurs | Foundation | done |
 | 4 | Design system & UI foundation | Foundation | done |
 | 5 | Connexion admin et liste des séries | Slice 1 | done |
-| 6 | Fiche série | Slice 2 | planned |
+| 6 | Fiche série | Slice 2 | in-progress |
 | 7 | Épisodes | Slice 3 | planned |
 | 8 | Images | Slice 4 | planned |
 | 9 | Catégories | Slice 5 | planned |
@@ -83,10 +83,18 @@ Spec [0004](../specs/0004-connexion-liste-series/index.md) · code in `src/featu
 
 ## Slice 2: Fiche série
 
-### 6. Fiche série · needs a decision
+### 6. Fiche série · in-progress
 Créer, modifier et supprimer une série, et régler l'accès premium (série payante, nombre d'épisodes gratuits).
 **Done when:** un admin crée une série avec au moins une catégorie, la modifie, change ses réglages premium et la supprime après confirmation ; un titre déjà pris affiche une erreur claire.
-- [ ] Design it (spec): `/architect fiche série`
+- [x] Design it (spec): `/architect fiche série`
+- [ ] Build it: `/develop fiche série`
+   - [ ] Prérequis backend : la réponse admin garde les catégories masquées, API redéployée (AC-9)
+   - [ ] Fiche et modification : lien depuis la liste, aperçu, formulaire, catégories, langues, pays, accès, erreurs (AC-1, AC-3, AC-5 à AC-11, AC-14)
+   - [ ] Création et protections : page de création, changements non enregistrés, suppression, accessibilité (AC-2 à AC-4, AC-12, AC-13, AC-15)
+   - [ ] Mise en ligne sur `admin.nollli.com`, contrôle en lecture seule (AC-16)
+- [ ] Verify it: `/check verify fiche série`
+- [ ] Test it: `/test fiche série`
+Spec [0005](../specs/0005-fiche-serie/index.md)
 
 ## Slice 3: Épisodes
 
@@ -135,6 +143,9 @@ Hors de ce passage, gardé pour que le plan reste honnête.
 - **Vidéos hébergées**: envoyer ou importer une vidéo d'épisode vers l'hébergement vidéo · needs a decision (le backend répond `503` pour l'instant)
 - **Abonnés et revenus**: suivre les abonnés premium et les paiements · needs a decision (la fonctionnalité 5 du backend n'existe pas encore)
 - **Rôles et équipe éditoriale**: plusieurs niveaux d'accès (éditeur, admin) · needs a decision
+- **Année de sortie effaçable**: le backend accepte `releaseYear: null` en modification · from spec 0005
+- **Journal d'audit des séries**: tracer créations et suppressions côté backend, si le nombre d'admins grandit · from spec 0005
+- **Conflits d'écriture**: prévenir quand deux admins modifient la même série en même temps · from spec 0005
 
 ## Legend
 
