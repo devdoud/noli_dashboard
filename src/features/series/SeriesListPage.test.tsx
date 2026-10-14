@@ -18,9 +18,6 @@ function bodyRows() {
   return within(table).getAllByRole('row').slice(1)
 }
 
-// Attente plus longue : sous forte charge, le rendu de Mantine dans jsdom dépasse 1 s.
-const LOADED_UNDER_LOAD = { timeout: 5_000 }
-
 const scrollTo = vi.fn()
 
 beforeEach(() => {
@@ -190,6 +187,26 @@ describe('page dans l’adresse (AC-9)', { timeout: 15_000 }, () => {
     expect(requests.map((request) => request.page)).toEqual(['99', '3'])
   })
 
+  it('« Page précédente » vers la page 1 retire le paramètre de l’adresse', async () => {
+    server.use(seriesHandler(45))
+    const { router } = renderRoutes(routes, '/series?page=2')
+    await screen.findByText('Série 21')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Page précédente' }))
+
+    expect(await screen.findByText('Série 1')).toBeInTheDocument()
+    expect(currentPath(router)).toBe('/series')
+  })
+
+  it('ne demande jamais une autre taille de page que 20', async () => {
+    const requests: SeriesRequest[] = []
+    server.use(seriesHandler(45, { requests }))
+    renderRoutes(routes, '/series?page=3&limit=50')
+
+    expect(await screen.findByText('Série 41')).toBeInTheDocument()
+    expect(requests.map((request) => request.limit)).toEqual(['20'])
+  })
+
   it('revenir en arrière garde la page de l’adresse', async () => {
     server.use(seriesHandler(45))
     const { router } = renderRoutes(routes, '/series')
@@ -236,6 +253,48 @@ describe('états (AC-10)', { timeout: 15_000 }, () => {
     expect(await screen.findByText('Série 1')).toBeInTheDocument()
   })
 
+  it('garde l’écran d’erreur pendant « Réessayer », jusqu’à la réponse', async () => {
+    const release: { resolve?: () => void } = {}
+    const attempts = { count: 0 }
+    server.use(
+      http.get(`${API}/series`, async () => {
+        attempts.count += 1
+        if (attempts.count === 1) return HttpResponse.json({ message: 'Bad' }, { status: 400 })
+        await new Promise<void>((resolve) => {
+          release.resolve = resolve
+        })
+        return HttpResponse.json({
+          data: { total: 1, page: 1, limit: 20, series: [makeSeries(1)] },
+        })
+      }),
+    )
+    renderRoutes(routes, '/series')
+    await userEvent.click(await screen.findByRole('button', { name: 'Réessayer' }))
+
+    await waitFor(() => {
+      expect(release.resolve).toBeDefined()
+    })
+    expect(screen.getByRole('button', { name: 'Réessayer' })).toBeInTheDocument()
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+
+    release.resolve?.()
+    expect(await screen.findByText('Série 1')).toBeInTheDocument()
+  })
+
+  it('n’appelle l’API qu’une fois sur une erreur 4xx (pas de réessai)', async () => {
+    const attempts = { count: 0 }
+    server.use(
+      http.get(`${API}/series`, () => {
+        attempts.count += 1
+        return HttpResponse.json({ message: 'Not found' }, { status: 404 })
+      }),
+    )
+    renderRoutes(routes, '/series')
+
+    await screen.findByRole('button', { name: 'Réessayer' })
+    expect(attempts.count).toBe(1)
+  })
+
   it('garde les lignes précédentes grisées pendant le changement de page', async () => {
     const release: { resolve?: () => void } = {}
     server.use(
@@ -267,11 +326,11 @@ describe('états (AC-10)', { timeout: 15_000 }, () => {
         'aria-busy',
         'true',
       )
-    }, LOADED_UNDER_LOAD)
+    })
     expect(screen.getByText('Série 1')).toBeInTheDocument()
     expect(screen.getByText('1 à 20 sur 45')).toBeInTheDocument()
 
     release.resolve?.()
-    expect(await screen.findByText('Série 21', {}, LOADED_UNDER_LOAD)).toBeInTheDocument()
+    expect(await screen.findByText('Série 21')).toBeInTheDocument()
   })
 })
