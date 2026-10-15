@@ -140,7 +140,7 @@ Gérer toutes les catégories, masquées comprises : créer, modifier, masquer, 
    - [x] Image de catégorie, protections, accessibilité, écran étroit (AC-9, AC-11 à AC-13)
    - [ ] Base locale séparée de la production, essais réels, mise en ligne et contrôle en production en lecture seule (AC-14)
 - [ ] Verify it: `/check verify catégories`
-- [ ] Test it: `/test catégories`
+- [x] Test it: `/test catégories`
 Spec [0008](../specs/0008-categories/index.md) · Code `src/features/categories/`
 
 ## Slice 6: Recherche et filtres
