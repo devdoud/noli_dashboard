@@ -99,14 +99,14 @@ Spec [0005](../specs/0005-fiche-serie/index.md) · code in `src/features/series/
 ## Slice 3: Épisodes
 
 ### 7. Épisodes · in-progress
-Gérer les épisodes d'une série, rangés par saison, avec un lien vidéo collé et l'état de la vidéo visible.
-**Done when:** un admin ajoute un épisode (saison, numéro, titre, durée, lien vidéo), le modifie et le supprime après confirmation ; un doublon saison et numéro est refusé clairement ; l'état de chaque vidéo (`ready`, `pending`, `error`, `legacy`, `none`) est affiché.
+Gérer les épisodes d'une série, rangés par saison, et leur donner leur vidéo en l'envoyant vers l'hébergement vidéo (ou en l'important depuis un lien), avec l'état de chaque vidéo visible.
+**Done when:** un admin ajoute un épisode (saison, numéro, titre, durée), envoie son fichier vidéo et le voit passer à « Prête », le modifie et le supprime après confirmation ; un doublon saison et numéro est refusé clairement ; l'état de chaque vidéo (`ready`, `pending`, `error`, `legacy`, `none`) est affiché ; les anciens liens collés se migrent vers l'hébergement.
 - [x] Design it (spec): `/architect épisodes`
 - [ ] Build it: `/develop épisodes`
-   - [ ] Prérequis backend : lien collé modifiable, vérification vidéo hébergée, annonce au premier lien, API redéployée (AC-7, AC-15)
-   - [ ] Section et ajout : tableaux par saison, états de vidéo, accès, fenêtre d'ajout, doublon (AC-1 à AC-5, AC-8, AC-9)
-   - [ ] Modification, suppression et protections : épisode figé, lien, publication, suppression, fermeture, erreurs, accessibilité (AC-6, AC-7, AC-10 à AC-13, AC-15)
-   - [ ] Mise en ligne sur `admin.nollli.com`, contrôle en lecture seule (AC-14)
+   - [ ] Prérequis backend : import du lien collé stocké (`fromPastedLink`), API redéployée (AC-8)
+   - [ ] Section et informations : tableaux par saison, états, accès, fenêtre d'ajout et de modification, doublon (AC-1 à AC-6, AC-11, AC-12)
+   - [ ] Vidéos : envoi simple et tus en arrière plan, vérification, import, migration, remplacement, retrait, publication (AC-4, AC-7 à AC-10, AC-13)
+   - [ ] Suppression, protections, erreurs, accessibilité, puis mise en ligne contrôlée en lecture seule (AC-14 à AC-18)
 - [ ] Verify it: `/check verify épisodes`
 - [ ] Test it: `/test épisodes`
 Spec [0006](../specs/0006-episodes/index.md)
@@ -148,7 +148,6 @@ Un bouton qui envoie un push de test sur les téléphones de l'admin connecté.
 
 ## Deferred
 Hors de ce passage, gardé pour que le plan reste honnête.
-- **Vidéos hébergées**: envoyer ou importer une vidéo d'épisode vers l'hébergement vidéo · needs a decision (le backend répond `503` pour l'instant)
 - **Abonnés et revenus**: suivre les abonnés premium et les paiements · needs a decision (la fonctionnalité 5 du backend n'existe pas encore)
 - **Rôles et équipe éditoriale**: plusieurs niveaux d'accès (éditeur, admin) · needs a decision
 - **Année de sortie effaçable**: le backend accepte `releaseYear: null` en modification · from spec 0005
