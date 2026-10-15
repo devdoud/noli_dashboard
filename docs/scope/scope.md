@@ -17,7 +17,7 @@ _Ce sont des recommandations pour garder une construction ordonnée, pas des obl
 | 4 | Design system & UI foundation | Foundation | done |
 | 5 | Connexion admin et liste des séries | Slice 1 | done |
 | 6 | Fiche série | Slice 2 | done |
-| 7 | Épisodes | Slice 3 | planned |
+| 7 | Épisodes | Slice 3 | in-progress |
 | 8 | Images | Slice 4 | planned |
 | 9 | Catégories | Slice 5 | planned |
 | 10 | Recherche et filtres | Slice 6 | planned |
@@ -98,10 +98,18 @@ Spec [0005](../specs/0005-fiche-serie/index.md) · code in `src/features/series/
 
 ## Slice 3: Épisodes
 
-### 7. Épisodes · needs a decision
+### 7. Épisodes · in-progress
 Gérer les épisodes d'une série, rangés par saison, avec un lien vidéo collé et l'état de la vidéo visible.
 **Done when:** un admin ajoute un épisode (saison, numéro, titre, durée, lien vidéo), le modifie et le supprime après confirmation ; un doublon saison et numéro est refusé clairement ; l'état de chaque vidéo (`ready`, `pending`, `error`, `legacy`, `none`) est affiché.
-- [ ] Design it (spec): `/architect épisodes`
+- [x] Design it (spec): `/architect épisodes`
+- [ ] Build it: `/develop épisodes`
+   - [ ] Prérequis backend : lien collé modifiable, vérification vidéo hébergée, annonce au premier lien, API redéployée (AC-7, AC-15)
+   - [ ] Section et ajout : tableaux par saison, états de vidéo, accès, fenêtre d'ajout, doublon (AC-1 à AC-5, AC-8, AC-9)
+   - [ ] Modification, suppression et protections : épisode figé, lien, publication, suppression, fermeture, erreurs, accessibilité (AC-6, AC-7, AC-10 à AC-13, AC-15)
+   - [ ] Mise en ligne sur `admin.nollli.com`, contrôle en lecture seule (AC-14)
+- [ ] Verify it: `/check verify épisodes`
+- [ ] Test it: `/test épisodes`
+Spec [0006](../specs/0006-episodes/index.md)
 
 ## Slice 4: Images
 
@@ -146,6 +154,7 @@ Hors de ce passage, gardé pour que le plan reste honnête.
 - **Année de sortie effaçable**: le backend accepte `releaseYear: null` en modification · from spec 0005
 - **Journal d'audit des séries**: tracer créations et suppressions côté backend, si le nombre d'admins grandit · from spec 0005
 - **Conflits d'écriture**: prévenir quand deux admins modifient la même série en même temps · from spec 0005
+- **Déplacer un épisode**: changer sa saison ou son numéro sans perdre l'historique de visionnage · from spec 0006
 
 ## Legend
 
