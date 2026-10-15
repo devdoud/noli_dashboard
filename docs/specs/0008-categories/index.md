@@ -1,7 +1,7 @@
 # 0008. Gestion des catégories
 
 **Date**: 2026-10-15
-**Status**: Proposed
+**Status**: In Progress
 
 ## Summary
 

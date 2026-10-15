@@ -3,8 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { notifications } from '@mantine/notifications'
 import { http } from 'msw'
 import { routes } from '@/app/routes'
-import { readImageDimensions } from '@/features/series/images/imageDimensions'
-import { IMAGE_MESSAGES } from '@/features/series/images/imageRules'
+import { readImageDimensions } from '@/shared/images/imageDimensions'
+import { IMAGE_MESSAGES } from '@/shared/images/imageRules'
 import { resetSessionForTests } from '@/shared/session/session'
 import {
   apiError,
@@ -21,7 +21,7 @@ import { server } from '@/test/server'
 import { signInForTests } from '@/test/session'
 
 // jsdom ne décode pas les images : les dimensions lues sont choisies par chaque test.
-vi.mock('@/features/series/images/imageDimensions', () => ({
+vi.mock('@/shared/images/imageDimensions', () => ({
   readImageDimensions: vi.fn(),
 }))
 

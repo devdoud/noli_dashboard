@@ -3,7 +3,6 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { SERIES_PAGE_SIZE } from '@/features/series/page'
 import {
   adminSeriesResponseSchema,
-  allCategoriesSchema,
   deleteSeriesResponseSchema,
   seriesPageSchema,
   videoImportSchema,
@@ -15,20 +14,16 @@ import type { EpisodeCreatePayload, EpisodePatch } from '@/features/series/episo
 import type { SeriesCreatePayload, SeriesPatch } from '@/features/series/seriesPayload'
 import { apiRequest } from '@/shared/api/client'
 import { isApiError } from '@/shared/api/errors'
+import { seriesListsKey } from '@/shared/api/seriesKeys'
 
 export const seriesKeys = {
   all: ['series'] as const,
-  lists: ['series', 'list'] as const,
+  lists: seriesListsKey,
   list: (page: number) => ['series', 'list', page] as const,
   detail: (id: string) => ['series', 'detail', id] as const,
 }
 
-export const categoriesKeys = {
-  all: ['categories', 'all'] as const,
-}
-
 const DETAIL_STALE_TIME_MS = 30_000
-const CATEGORIES_STALE_TIME_MS = 5 * 60_000
 
 export function useSeriesPage(page: number) {
   return useQuery({
@@ -68,23 +63,6 @@ export function useSeriesDetail(
     staleTime: DETAIL_STALE_TIME_MS,
     refetchOnWindowFocus: false,
     refetchInterval: (query) => refetchInterval(query.state.data),
-  })
-}
-
-/** Toutes les catégories, masquées comprises (AC-9). */
-export function useAllCategories() {
-  return useQuery({
-    queryKey: categoriesKeys.all,
-    queryFn: async ({ signal }) => {
-      const response = await apiRequest({
-        method: 'GET',
-        path: '/categories/all',
-        schema: allCategoriesSchema,
-        signal,
-      })
-      return response.categories
-    },
-    staleTime: CATEGORIES_STALE_TIME_MS,
   })
 }
 

@@ -1,5 +1,6 @@
-// Emplacement d'une image (spec 0007, AC-2 à AC-10) : choix ou dépôt, contrôles, aperçu, envoi,
-// retrait. Autonome : il n'enregistre rien par le formulaire de la série ni celui de l'épisode.
+// Emplacement d'une image (spec 0007, AC-2 à AC-10 ; partagé par les catégories, spec 0008) :
+// choix ou dépôt, contrôles, aperçu, envoi, retrait. Autonome : il n'enregistre rien par le
+// formulaire qui l'entoure. Les mutations viennent de l'appelant (séries, épisodes, catégories).
 import {
   AspectRatio,
   Badge,
@@ -14,8 +15,7 @@ import {
 } from '@mantine/core'
 import { IconPhoto, IconTrash, IconUpload } from '@tabler/icons-react'
 import { useEffect, useId, useRef, useState, type CSSProperties, type DragEvent } from 'react'
-import type { useImageMutations } from '@/features/series/api'
-import { readImageDimensions } from '@/features/series/images/imageDimensions'
+import { readImageDimensions } from '@/shared/images/imageDimensions'
 import {
   ACCEPTED_IMAGE_TYPES,
   checkDimensions,
@@ -24,7 +24,7 @@ import {
   imageErrorMessage,
   isHostedImage,
   type ImageSlotRules,
-} from '@/features/series/images/imageRules'
+} from '@/shared/images/imageRules'
 import { isApiError } from '@/shared/api/errors'
 import { confirmDanger } from '@/shared/ui/confirmDanger'
 import { notifySuccess } from '@/shared/ui/notifySuccess'
@@ -36,6 +36,20 @@ interface Preview {
   readonly url: string
 }
 
+/** Une écriture d'image (forme compatible avec une mutation TanStack Query). */
+export interface ImageMutation<TVariables> {
+  readonly isPending: boolean
+  mutate(
+    variables: TVariables,
+    options?: { onSuccess?: () => void; onError?: (error: unknown) => void },
+  ): void
+}
+
+export interface ImageMutations {
+  readonly upload: ImageMutation<File>
+  readonly remove: ImageMutation<void>
+}
+
 export interface ImageSlotProps {
   readonly slot: ImageSlotRules
   readonly currentUrl: string | undefined
@@ -43,7 +57,7 @@ export interface ImageSlotProps {
   readonly alt: string
   /** Complète les noms des boutons, par exemple « de l'épisode 3 de la saison 1 ». */
   readonly nameSuffix?: string
-  readonly mutations: ReturnType<typeof useImageMutations>
+  readonly mutations: ImageMutations
   /** Un aperçu attend ou un envoi est en cours (protection de la page, AC-9). */
   readonly onPendingChange: (pending: boolean) => void
   /** L'épisode a disparu (404) : la fenêtre se ferme sans question. */

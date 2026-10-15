@@ -23,7 +23,7 @@ import { schemaResolver, useForm, type FormErrors } from '@mantine/form'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router'
-import { categoriesKeys, useAllCategories } from '@/features/series/api'
+import { categoriesKeys, useAllCategories } from '@/shared/api/categories'
 import { countryGroups } from '@/features/series/countries'
 import { LanguagesInput } from '@/features/series/LanguagesInput'
 import {

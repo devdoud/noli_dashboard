@@ -4,8 +4,8 @@ import { Stack, Text } from '@mantine/core'
 import { useState } from 'react'
 import { useImageMutations } from '@/features/series/api'
 import { episodeName } from '@/features/series/episodes/episodeModel'
-import { IMAGE_SLOTS } from '@/features/series/images/imageRules'
-import { ImageSlot } from '@/features/series/images/ImageSlot'
+import { IMAGE_SLOTS } from '@/shared/images/imageRules'
+import { ImageSlot } from '@/shared/images/ImageSlot'
 import type { AdminEpisode } from '@/features/series/schemas'
 
 interface EpisodeThumbnailProps {
