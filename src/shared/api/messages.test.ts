@@ -51,14 +51,14 @@ describe('toUserMessage', () => {
       body: { code: 'CATEGORY_IN_USE', seriesCount: 3 },
     })
     expect(toUserMessage(error).message).toBe(
-      "Cette catégorie est encore utilisée par 3 série(s). Retirez la de ces séries d'abord.",
+      "Cette catégorie est encore utilisée par 3 série(s). Retirez-la de ces séries d'abord.",
     )
   })
 
   it('a une formulation de secours sans seriesCount', () => {
     const error = http(409, { code: 'CATEGORY_IN_USE', body: { seriesCount: 'beaucoup' } })
     expect(toUserMessage(error).message).toBe(
-      "Cette catégorie est encore utilisée par des séries. Retirez la de ces séries d'abord.",
+      "Cette catégorie est encore utilisée par des séries. Retirez-la de ces séries d'abord.",
     )
   })
 

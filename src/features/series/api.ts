@@ -19,7 +19,7 @@ import { seriesListsKey } from '@/shared/api/seriesKeys'
 export const seriesKeys = {
   all: ['series'] as const,
   lists: seriesListsKey,
-  list: (page: number) => ['series', 'list', page] as const,
+  list: (page: number) => [...seriesListsKey, page] as const,
   detail: (id: string) => ['series', 'detail', id] as const,
 }
 

@@ -193,6 +193,14 @@ export function CategoryModal({ target, categories, onClose, onDirtyChange }: Ca
     onClose()
   }
 
+  // La catégorie modifiée a disparu de la liste (autre admin) : la fenêtre se ferme et le dit.
+  const vanished = editing !== undefined && live === undefined
+  useEffect(() => {
+    if (!vanished) return
+    notifications.show({ color: 'red', title: 'Erreur', message: CATEGORY_MESSAGES.gone })
+    onClose()
+  }, [vanished, onClose])
+
   const handleError = (error: unknown) => {
     const conflict = conflictField(error)
     if (conflict !== undefined) {

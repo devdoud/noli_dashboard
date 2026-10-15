@@ -25,7 +25,7 @@ export const CATEGORY_MESSAGES = {
   nameRequired: 'Nom requis.',
   nameTooLong: '50 caractères au plus.',
   nameNoAlnum: 'Le nom doit contenir au moins une lettre ou un chiffre.',
-  nameReserved: 'Ce nom est réservé, choisissez en un autre.',
+  nameReserved: 'Ce nom est réservé, choisissez-en un autre.',
   nameTaken: "Trop proche d'une catégorie existante.",
   descriptionTooLong: '300 caractères au plus.',
   slugPattern: 'Lettres minuscules, chiffres et tirets seulement (par exemple comedie-romantique).',

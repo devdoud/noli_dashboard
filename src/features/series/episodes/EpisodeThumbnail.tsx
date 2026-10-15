@@ -58,7 +58,6 @@ export function EpisodeThumbnailMini({ url }: { readonly url: string }) {
       alt=""
       width={64}
       height={36}
-      loading="lazy"
       style={{ objectFit: 'cover', borderRadius: 4, flexShrink: 0, display: 'block' }}
       onError={() => {
         setFailed(true)

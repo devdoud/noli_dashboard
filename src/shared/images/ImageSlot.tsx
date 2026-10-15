@@ -204,7 +204,7 @@ export function ImageSlot({
       title: `Retirer ${name} ?`,
       message: isHostedImage(currentUrl)
         ? "L'image sera effacée de l'hébergement. Cette action est définitive."
-        : 'Le lien sera retiré de la série.',
+        : slot.externalRemoval,
       confirmLabel: 'Retirer',
     })
     if (!confirmed) return

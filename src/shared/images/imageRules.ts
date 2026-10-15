@@ -19,6 +19,8 @@ export interface ImageSlotRules {
   readonly removed: string
   /** Texte d'un 404 : le propriétaire de l'image a disparu. */
   readonly gone: string
+  /** Confirmation du retrait d'un ancien lien collé (rien n'est effacé ailleurs). */
+  readonly externalRemoval: string
 }
 
 export const IMAGE_SLOTS: Readonly<Record<ImageSlotKind, ImageSlotRules>> = {
@@ -33,6 +35,7 @@ export const IMAGE_SLOTS: Readonly<Record<ImageSlotKind, ImageSlotRules>> = {
     saved: 'Couverture mise à jour.',
     removed: 'Couverture retirée.',
     gone: "Cette série n'existe plus.",
+    externalRemoval: 'Le lien sera retiré de la série.',
   },
   banner: {
     kind: 'banner',
@@ -45,6 +48,7 @@ export const IMAGE_SLOTS: Readonly<Record<ImageSlotKind, ImageSlotRules>> = {
     saved: 'Bannière mise à jour.',
     removed: 'Bannière retirée.',
     gone: "Cette série n'existe plus.",
+    externalRemoval: 'Le lien sera retiré de la série.',
   },
   thumbnail: {
     kind: 'thumbnail',
@@ -57,6 +61,7 @@ export const IMAGE_SLOTS: Readonly<Record<ImageSlotKind, ImageSlotRules>> = {
     saved: 'Vignette mise à jour.',
     removed: 'Vignette retirée.',
     gone: "Cet épisode n'existe plus.",
+    externalRemoval: "Le lien sera retiré de l'épisode.",
   },
   category: {
     kind: 'category',
@@ -69,6 +74,7 @@ export const IMAGE_SLOTS: Readonly<Record<ImageSlotKind, ImageSlotRules>> = {
     saved: 'Image mise à jour.',
     removed: 'Image retirée.',
     gone: "Cette catégorie n'existe plus.",
+    externalRemoval: 'Le lien sera retiré de la catégorie.',
   },
 }
 
@@ -93,8 +99,6 @@ export const IMAGE_MESSAGES = {
   unavailable: "Le service d'images est indisponible pour le moment.",
   conflict: "Cette image vient d'être changée par ailleurs.",
   network: 'Envoi impossible : vérifiez la connexion et réessayez.',
-  seriesGone: "Cette série n'existe plus.",
-  episodeGone: "Cet épisode n'existe plus.",
 } as const
 
 export interface ImageDimensions {

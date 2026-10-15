@@ -481,7 +481,8 @@ describe('cas limites (AC-2, AC-4, AC-5, AC-6, AC-8)', { timeout: 45_000 }, () =
       .getByRole('button', { name: "Modifier l'épisode 1 de la saison 1" })
       .closest('tr')
     const mini = row?.querySelector('img[alt=""]')
-    expect(mini).toHaveAttribute('loading', 'lazy')
+    // Pas de chargement différé : dans un tableau qui défile, l'image ne se chargerait pas.
+    expect(mini).not.toHaveAttribute('loading')
 
     fireEvent.error(mini as Element)
 

@@ -127,7 +127,7 @@ describe('imageErrorMessage (AC-8)', () => {
     [http(429), IMAGE_MESSAGES.limit],
     [http(503), IMAGE_MESSAGES.unavailable],
     [http(409), IMAGE_MESSAGES.conflict],
-    [http(404), IMAGE_MESSAGES.seriesGone],
+    [http(404), "Cette série n'existe plus."],
     [new ApiError({ kind: 'network' }), IMAGE_MESSAGES.network],
     [new ApiError({ kind: 'timeout' }), IMAGE_MESSAGES.network],
   ])('%s', (error, expected) => {
@@ -135,7 +135,7 @@ describe('imageErrorMessage (AC-8)', () => {
   })
 
   it('vise l’épisode sur un 404 de la vignette', () => {
-    expect(imageErrorMessage(http(404), IMAGE_SLOTS.thumbnail)).toBe(IMAGE_MESSAGES.episodeGone)
+    expect(imageErrorMessage(http(404), IMAGE_SLOTS.thumbnail)).toBe("Cet épisode n'existe plus.")
   })
 
   it('montre un message connu du backend, chaîne ou tableau', () => {

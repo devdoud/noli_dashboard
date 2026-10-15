@@ -247,7 +247,7 @@ describe('applyFieldErrors, cas limites (AC-13)', () => {
     expect(show).toHaveBeenCalledWith(
       expect.objectContaining({
         message:
-          "Cette catégorie est encore utilisée par 2 série(s). Retirez la de ces séries d'abord.",
+          "Cette catégorie est encore utilisée par 2 série(s). Retirez-la de ces séries d'abord.",
       }),
     )
   })

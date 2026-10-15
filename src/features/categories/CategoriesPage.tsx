@@ -122,11 +122,26 @@ export function CategoriesPage() {
   const [toggling, setToggling] = useState<string>()
   const [deleting, setDeleting] = useState<string>()
   const [inUse, setInUse] = useState<InUse>()
-  const [focusTarget, setFocusTarget] = useState<FocusTarget>()
+  const [staleCount, setStaleCount] = useState(0)
   const saving = useRef(false)
+  // Bouton à refocaliser après un déplacement ; vidé dès qu'il est appliqué (AC-12).
+  const pendingFocus = useRef<FocusTarget>(undefined)
   const moveButtons = useRef(new Map<string, HTMLButtonElement>())
 
   const serverIds = (categories ?? []).map((category) => category._id)
+  // La liste a changé (autre admin) pendant un ordre en cours : l'ordre est abandonné pour de
+  // bon (spec 0008), même si la liste revient ensuite à l'état d'avant. Ajustement pendant le
+  // rendu, comme le recommande React pour un état qui suit une donnée.
+  const serverKey = serverIds.join('|')
+  const [seenServerKey, setSeenServerKey] = useState(serverKey)
+  if (serverKey !== seenServerKey) {
+    setSeenServerKey(serverKey)
+    if (draftIds !== undefined && categories !== undefined && !sameIdSet(draftIds, serverIds)) {
+      setDraftIds(undefined)
+      setAnnouncement('')
+      setStaleCount((count) => count + 1)
+    }
+  }
   // Un ordre en cours ne vaut que pour la liste sur laquelle il a commencé.
   const draftValid = draftIds !== undefined && sameIdSet(draftIds, serverIds)
   const draft = draftValid ? draftIds : undefined
@@ -135,29 +150,31 @@ export function CategoriesPage() {
 
   const guard = useUnsavedChangesGuard(draft !== undefined || modalDirty)
 
-  // La liste a changé (autre admin) pendant un ordre en cours : il est abandonné (spec 0008).
-  // L'ordre abandonné est déjà ignoré (`draft` dérivé) ; l'effet prévient une seule fois.
-  const notifiedStale = useRef<readonly string[]>(undefined)
+  // Prévient de l'ordre abandonné (une notification par abandon).
   useEffect(() => {
-    if (draftIds === undefined || categories === undefined || draftValid) return
-    if (notifiedStale.current === draftIds) return
-    notifiedStale.current = draftIds
+    if (staleCount === 0) return
     notifications.show({ color: 'red', title: 'Erreur', message: CATEGORY_MESSAGES.orderChanged })
-  }, [draftIds, categories, draftValid])
+  }, [staleCount])
 
   // Après un déplacement, le focus reste sur le bouton de la ligne déplacée (AC-12).
   useLayoutEffect(() => {
-    if (focusTarget === undefined) return
-    const own = moveButtons.current.get(`${focusTarget.id}:${focusTarget.direction}`)
+    const target = pendingFocus.current
+    if (target === undefined) return
+    pendingFocus.current = undefined
+    const own = moveButtons.current.get(`${target.id}:${target.direction}`)
     const other = moveButtons.current.get(
-      `${focusTarget.id}:${focusTarget.direction === 'up' ? 'down' : 'up'}`,
+      `${target.id}:${target.direction === 'up' ? 'down' : 'up'}`,
     )
     const button = own !== undefined && !own.disabled ? own : other
     button?.focus()
-  }, [focusTarget, draftIds])
+  }, [draftIds])
 
   const onModalDirty = useCallback((dirty: boolean) => {
     setModalDirty(dirty)
+  }, [])
+  const closeModal = useCallback(() => {
+    setTarget(undefined)
+    setModalDirty(false)
   }, [])
 
   const move = (category: Category, direction: MoveDirection) => {
@@ -168,7 +185,7 @@ export function CategoriesPage() {
     const position = next.indexOf(category._id) + 1
     setDraftIds(sameSequence(next, serverIds) ? undefined : next)
     setAnnouncement(positionText(category.name, position, next.length))
-    setFocusTarget({ id: category._id, direction })
+    pendingFocus.current = { id: category._id, direction }
   }
 
   const saveOrder = async () => {
@@ -486,10 +503,7 @@ export function CategoriesPage() {
           key={target.mode === 'create' ? 'create' : target.category._id}
           target={target}
           categories={categories}
-          onClose={() => {
-            setTarget(undefined)
-            setModalDirty(false)
-          }}
+          onClose={closeModal}
           onDirtyChange={onModalDirty}
         />
       )}
@@ -505,7 +519,7 @@ export function CategoriesPage() {
         {inUse === undefined ? null : (
           <Stack gap="md">
             <Text size="sm">
-              {`${inUseText(inUse.category.name, inUse.seriesCount)} Retirez la de ces séries, ou masquez la.`}
+              {`${inUseText(inUse.category.name, inUse.seriesCount)} Retirez-la de ces séries, ou masquez-la.`}
             </Text>
             <Group justify="flex-end">
               {inUse.category.isVisible ? (

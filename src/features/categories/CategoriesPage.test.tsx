@@ -407,7 +407,7 @@ describe('suppression (AC-8)', { timeout: 45_000 }, () => {
     const refused = await screen.findByRole('dialog', { name: 'Suppression impossible' })
     expect(
       within(refused).getByText(
-        '« Drame » est encore utilisée par 3 séries. Retirez la de ces séries, ou masquez la.',
+        '« Drame » est encore utilisée par 3 séries. Retirez-la de ces séries, ou masquez-la.',
       ),
     ).toBeInTheDocument()
     await user.click(within(refused).getByRole('button', { name: 'Masquer plutôt' }))
@@ -466,5 +466,140 @@ describe('image (AC-9)', { timeout: 45_000 }, () => {
       'src',
       expect.stringContaining('res.cloudinary.com'),
     )
+  })
+})
+
+describe('cas limites de la revue (AC-5, AC-7, AC-9, AC-10, AC-12)', { timeout: 45_000 }, () => {
+  const listKey = ['categories', 'all']
+
+  it('rend le focus au titre après « Annuler » et après l’enregistrement de l’ordre', async () => {
+    const user = userEvent.setup()
+    await openPage()
+
+    await user.click(screen.getByRole('button', { name: 'Descendre « Drame »' }))
+    await user.click(screen.getByRole('button', { name: 'Annuler' }))
+    expect(screen.getByRole('heading', { level: 1, name: 'Catégories' })).toHaveFocus()
+
+    await user.click(screen.getByRole('button', { name: 'Descendre « Drame »' }))
+    await user.click(screen.getByRole('button', { name: "Enregistrer l'ordre" }))
+    await screen.findByText('Ordre enregistré.')
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 1, name: 'Catégories' })).toHaveFocus()
+    })
+  })
+
+  it('abandonne pour de bon un ordre dont la liste a changé', async () => {
+    const user = userEvent.setup()
+    const { queryClient } = await openPage()
+    const original = queryClient.getQueryData<unknown[]>(listKey) ?? []
+
+    await user.click(screen.getByRole('button', { name: 'Descendre « Drame »' }))
+    act(() => {
+      queryClient.setQueryData(listKey, [
+        ...original,
+        makeCategory(7, 'Polar', { displayOrder: 9 }),
+      ])
+    })
+    expect(await screen.findByText(CATEGORY_MESSAGES.orderChanged)).toBeInTheDocument()
+    expect(screen.queryByText(CATEGORY_MESSAGES.blockedByOrder)).not.toBeInTheDocument()
+
+    act(() => {
+      queryClient.setQueryData(listKey, original)
+    })
+
+    await waitFor(() => {
+      expect(rowNames()).toEqual(['Drame', 'Comédie', 'Bientôt'])
+    })
+    expect(screen.queryByText(CATEGORY_MESSAGES.blockedByOrder)).not.toBeInTheDocument()
+  })
+
+  it('garde le bandeau et prévient quand l’enregistrement de l’ordre échoue autrement', async () => {
+    const user = userEvent.setup()
+    await openPage()
+    server.use(
+      http.put(`${API}/categories/order`, () =>
+        HttpResponse.json({ message: 'boom' }, { status: 500 }),
+      ),
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Descendre « Drame »' }))
+    await user.click(screen.getByRole('button', { name: "Enregistrer l'ordre" }))
+
+    expect(await screen.findByText(/Erreur du serveur/)).toBeInTheDocument()
+    expect(screen.getByText(CATEGORY_MESSAGES.blockedByOrder)).toBeInTheDocument()
+  })
+
+  it('ferme la fenêtre quand la catégorie modifiée disparaît de la liste', async () => {
+    const user = userEvent.setup()
+    const { queryClient } = await openPage()
+    await user.click(screen.getByRole('button', { name: 'Modifier « Comédie »' }))
+    await screen.findByRole('dialog', { name: 'Modifier « Comédie »' })
+
+    act(() => {
+      queryClient.setQueryData<{ _id: string }[]>(listKey, (list) =>
+        list?.filter((category) => category._id !== 'cat1'),
+      )
+    })
+
+    expect(await screen.findByText(CATEGORY_MESSAGES.gone)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'Modifier « Comédie »' })).not.toBeInTheDocument()
+    })
+  })
+
+  it('affiche le 409 du backend sous l’adresse', async () => {
+    const user = userEvent.setup()
+    await openPage()
+    server.use(
+      http.patch(`${API}/categories/:id`, () =>
+        HttpResponse.json({ message: 'A category with this slug already exists' }, { status: 409 }),
+      ),
+    )
+    await user.click(screen.getByRole('button', { name: 'Modifier « Drame »' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Modifier « Drame »' })
+
+    await user.click(within(dialog).getByRole('button', { name: "Modifier l'adresse" }))
+    await user.clear(within(dialog).getByRole('textbox', { name: /^Adresse/ }))
+    await user.type(within(dialog).getByRole('textbox', { name: /^Adresse/ }), 'drame-libre')
+    await user.click(within(dialog).getByRole('button', { name: 'Enregistrer' }))
+
+    expect(await within(dialog).findByText(CATEGORY_MESSAGES.slugTaken)).toBeInTheDocument()
+  })
+
+  it('ferme la fenêtre sur un 404 en modification', async () => {
+    const user = userEvent.setup()
+    await openPage()
+    server.use(
+      http.patch(`${API}/categories/:id`, () =>
+        HttpResponse.json({ message: 'Category not found' }, { status: 404 }),
+      ),
+    )
+    await user.click(screen.getByRole('button', { name: 'Modifier « Drame »' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Modifier « Drame »' })
+
+    await user.type(within(dialog).getByRole('textbox', { name: /^Nom/ }), 's')
+    await user.click(within(dialog).getByRole('button', { name: 'Enregistrer' }))
+
+    expect(await screen.findByText(CATEGORY_MESSAGES.gone)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'Modifier « Drame »' })).not.toBeInTheDocument()
+    })
+  })
+
+  it('retire un lien externe avec le texte propre aux catégories', async () => {
+    const user = userEvent.setup()
+    const { backend } = await openPage([
+      makeCategory(0, 'Drame', { imageUrl: 'https://picsum.photos/400/400' }),
+    ])
+    await user.click(screen.getByRole('button', { name: 'Modifier « Drame »' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Modifier « Drame »' })
+
+    await user.click(within(dialog).getByRole('button', { name: "Retirer l'image de « Drame »" }))
+    const confirm = await screen.findByRole('dialog', { name: "Retirer l'image de « Drame » ?" })
+    expect(within(confirm).getByText('Le lien sera retiré de la catégorie.')).toBeInTheDocument()
+    await user.click(within(confirm).getByRole('button', { name: 'Retirer' }))
+
+    expect(await screen.findByText('Image retirée.')).toBeInTheDocument()
+    expect(backend.callsTo('DELETE', '/categories/cat0/image')).toHaveLength(1)
   })
 })
