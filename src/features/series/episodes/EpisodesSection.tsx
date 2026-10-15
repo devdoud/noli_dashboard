@@ -22,6 +22,7 @@ import {
   groupBySeason,
   isEpisodeVisible,
 } from '@/features/series/episodes/episodeModel'
+import { EpisodeThumbnailMini } from '@/features/series/episodes/EpisodeThumbnail'
 import { EpisodeVideoCell } from '@/features/series/episodes/EpisodeVideoCell'
 import { useVideoUploads } from '@/features/series/episodes/uploads/uploadsContext'
 import type { AdminEpisode, AdminSeries } from '@/features/series/schemas'
@@ -166,9 +167,18 @@ export function EpisodesSection({ series, onDirtyChange, onLeave }: EpisodesSect
                       <Table.Tr key={key}>
                         <Table.Td ta="right">{episode.episodeNumber}</Table.Td>
                         <Table.Td>
-                          <Text size="sm" fw={600}>
-                            {episode.title}
-                          </Text>
+                          <Group gap="sm" wrap="nowrap">
+                            {episode.thumbnail === null ||
+                            episode.thumbnail === undefined ? null : (
+                              <EpisodeThumbnailMini
+                                key={episode.thumbnail}
+                                url={episode.thumbnail}
+                              />
+                            )}
+                            <Text size="sm" fw={600}>
+                              {episode.title}
+                            </Text>
+                          </Group>
                         </Table.Td>
                         <Table.Td style={NO_WRAP}>
                           {episode.duration === null ||
