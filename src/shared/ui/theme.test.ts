@@ -72,6 +72,7 @@ describe('thème : contrastes des tokens (AC-4)', () => {
     ['texte secondaire clair', light['--mantine-color-dimmed'], surfaces.light, 4.5],
     ['lien ambre clair', light['--mantine-color-anchor'], surfaces.light, 4.5],
     ['texte d’erreur clair', light['--mantine-color-error'], surfaces.light, 4.5],
+    ['badge vert clair', light['--mantine-color-green-light-color'], surfaces.light, 4.5],
     ['bordure de champ claire', light['--noli-color-field-border'], surfaces.light, 3],
     ['focus clair', light['--noli-color-focus'], surfaces.light, 3],
     ['texte principal sombre', dark['--mantine-color-text'], surfaces.dark, 4.5],
