@@ -16,7 +16,7 @@ _Ce sont des recommandations pour garder une construction ordonnée, pas des obl
 | 3 | Client API & erreurs | Foundation | done |
 | 4 | Design system & UI foundation | Foundation | done |
 | 5 | Connexion admin et liste des séries | Slice 1 | done |
-| 6 | Fiche série | Slice 2 | in-progress |
+| 6 | Fiche série | Slice 2 | done |
 | 7 | Épisodes | Slice 3 | planned |
 | 8 | Images | Slice 4 | planned |
 | 9 | Catégories | Slice 5 | planned |
@@ -83,18 +83,18 @@ Spec [0004](../specs/0004-connexion-liste-series/index.md) · code in `src/featu
 
 ## Slice 2: Fiche série
 
-### 6. Fiche série · in-progress
+### 6. Fiche série · done
 Créer, modifier et supprimer une série, et régler l'accès premium (série payante, nombre d'épisodes gratuits).
 **Done when:** un admin crée une série avec au moins une catégorie, la modifie, change ses réglages premium et la supprime après confirmation ; un titre déjà pris affiche une erreur claire.
 - [x] Design it (spec): `/architect fiche série`
-- [ ] Build it: `/develop fiche série`
-   - [ ] Prérequis backend : la réponse admin garde les catégories masquées, API redéployée (AC-9)
+- [x] Build it: `/develop fiche série`
+   - [x] Prérequis backend : la réponse admin garde les catégories masquées, API redéployée (AC-9)
    - [x] Fiche et modification : lien depuis la liste, aperçu, formulaire, catégories, langues, pays, accès, erreurs (AC-1, AC-3, AC-5 à AC-11, AC-14)
    - [x] Création et protections : page de création, changements non enregistrés, suppression, accessibilité (AC-2 à AC-4, AC-12, AC-13, AC-15)
-   - [ ] Mise en ligne sur `admin.nollli.com`, contrôle en lecture seule (AC-16)
-- [ ] Verify it: `/check verify fiche série`
-- [ ] Test it: `/test fiche série`
-Spec [0005](../specs/0005-fiche-serie/index.md) · code in `src/features/series/` (et `noli-backend`, branche `feat/admin-hidden-categories`)
+   - [x] Mise en ligne sur `admin.nollli.com`, contrôle en lecture seule (AC-16)
+- [x] Verify it: `/check verify fiche série`
+- [x] Test it: `/test fiche série`
+Spec [0005](../specs/0005-fiche-serie/index.md) · code in `src/features/series/` (et `noli-backend`, `src/series/content-access.ts`)
 
 ## Slice 3: Épisodes
 

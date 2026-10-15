@@ -9,6 +9,7 @@ import {
   MultiSelect,
   NumberInput,
   Paper,
+  Pill,
   SegmentedControl,
   Select,
   Stack,
@@ -34,6 +35,7 @@ import {
   type SeriesFormField,
   type SeriesFormValues,
 } from '@/features/series/seriesFormSchema'
+import type { CategoryOption } from '@/features/series/schemas'
 import { changedFields } from '@/features/series/seriesPayload'
 import { isApiError } from '@/shared/api/errors'
 import { applyFieldErrors } from '@/shared/ui/applyFieldErrors'
@@ -72,6 +74,8 @@ export interface SeriesFormProps {
   readonly onGuardChange: (active: boolean) => void
   /** Destination du lien de l'alerte « Cette série n'existe plus. ». */
   readonly listPath: string
+  /** Catégories déjà connues par la fiche : leurs noms s'affichent avant la liste complète. */
+  readonly knownCategories?: readonly CategoryOption[]
   readonly onLeaveGone?: () => void
 }
 
@@ -115,6 +119,7 @@ export function SeriesForm({
   onGuardChange,
   listPath,
   onLeaveGone,
+  knownCategories = [],
 }: SeriesFormProps) {
   const queryClient = useQueryClient()
   const categories = useAllCategories()
@@ -200,10 +205,19 @@ export function SeriesForm({
     if (field !== undefined) focusField(field)
   }
 
-  const categoryData = (categories.data ?? []).map((category) => ({
-    value: category._id,
-    label: category.isVisible ? category.name : `${category.name} (masquée)`,
-  }))
+  // Les catégories de la fiche d'abord (connues tout de suite), puis la liste complète, qui
+  // l'emporte : une pastille n'affiche jamais un identifiant pendant le chargement (AC-9).
+  const categoryData = [
+    ...new Map(
+      [...knownCategories, ...(categories.data ?? [])].map((category) => [
+        category._id,
+        {
+          value: category._id,
+          label: category.isVisible ? category.name : `${category.name} (masquée)`,
+        },
+      ]),
+    ).values(),
+  ]
 
   const countryInputProps = form.getInputProps('country')
 
@@ -277,6 +291,21 @@ export function SeriesForm({
                 nothingFoundMessage="Aucune catégorie trouvée"
                 key={form.key('categoryIds')}
                 {...form.getInputProps('categoryIds')}
+                renderPill={({ option, value: categoryId, onRemove, disabled }) => {
+                  // Mantine type l'option comme toujours présente ; un identifiant hors liste la laisse vide.
+                  const label = (option as { label: string } | undefined)?.label ?? categoryId ?? ''
+                  // Un nom accessible pour le bouton de retrait, comme les pastilles de langue (AC-15).
+                  return (
+                    <Pill
+                      withRemoveButton={!disabled}
+                      onRemove={onRemove}
+                      disabled={disabled}
+                      removeButtonProps={{ 'aria-label': `Retirer ${label}` }}
+                    >
+                      {label}
+                    </Pill>
+                  )
+                }}
               />
             )}
             <Box>

@@ -402,3 +402,142 @@ describe('suppression (AC-13)', { timeout: 45_000 }, () => {
     expect(within(dialog).getByRole('textbox')).toHaveValue('Le Secret du Docteur Mensah')
   })
 })
+
+describe('pastilles de catégories (AC-9, AC-15)', { timeout: 45_000 }, () => {
+  const seriesWithHidden = () =>
+    makeAdminSeries({
+      categories: [
+        { _id: 'c1', name: 'Drame', slug: 'drame', isVisible: true },
+        { _id: 'c9', name: 'Bientôt', slug: 'bientot', isVisible: false },
+      ],
+    })
+
+  it('affiche les noms dès le chargement de la fiche, avant la liste des catégories', async () => {
+    const release: { resolve?: () => void } = {}
+    server.use(
+      adminSeriesHandler(seriesWithHidden()),
+      http.get(`${API}/categories/all`, async () => {
+        await new Promise<void>((resolve) => {
+          release.resolve = resolve
+        })
+        return HttpResponse.json({ categories: [] })
+      }),
+    )
+    renderRoutes(routes, DETAIL_PATH)
+    await waitForForm()
+
+    expect(screen.getAllByText('Drame').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Bientôt (masquée)').length).toBeGreaterThan(0)
+    expect(screen.queryByText('c1')).not.toBeInTheDocument()
+    release.resolve?.()
+  })
+
+  it('nomme chaque bouton de retrait de catégorie', async () => {
+    renderDetail(seriesWithHidden())
+    await waitForForm()
+
+    // Mantine cache ces boutons aux lecteurs d'écran (retrait au clavier par Retour arrière) ;
+    // ils portent quand même un nom, comme les pastilles de langue.
+    await waitFor(() => {
+      const names = [...document.querySelectorAll('.mantine-Pill-remove')].map((button) =>
+        button.getAttribute('aria-label'),
+      )
+      expect(names).toEqual(['Retirer Drame', 'Retirer Bientôt (masquée)', 'Retirer Français'])
+    })
+  })
+})
+
+describe('pays (AC-11)', { timeout: 45_000 }, () => {
+  it('envoie seulement le pays choisi dans la liste', async () => {
+    const captured: Captured = { bodies: [] }
+    server.use(patchHandler(captured))
+    renderDetail()
+    await waitForForm()
+    const country = document.getElementById('serie-country')
+    if (country === null) throw new Error('Champ Pays introuvable')
+
+    // Le Select garde son texte avec clear dans jsdom : on sélectionne tout pour le remplacer.
+    await userEvent.tripleClick(country)
+    await userEvent.keyboard('Togo{ArrowDown}{Enter}')
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
+
+    await screen.findByText('Modifications enregistrées.')
+    expect(captured.bodies).toEqual([{ country: 'Togo' }])
+  })
+
+  it('garde une valeur actuelle hors liste sans l’envoyer', async () => {
+    const captured: Captured = { bodies: [] }
+    server.use(patchHandler(captured))
+    renderDetail(makeAdminSeries({ country: 'USA' }))
+    await waitForForm()
+    expect(document.getElementById('serie-country')).toHaveValue('USA')
+
+    await userEvent.type(screen.getByRole('textbox', { name: /Titre/ }), ' 2')
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
+
+    await screen.findByText('Modifications enregistrées.')
+    expect(captured.bodies).toEqual([{ title: 'Le Secret du Docteur Mensah 2' }])
+  })
+})
+
+describe('fermeture de l’onglet et fin de session (AC-12)', { timeout: 45_000 }, () => {
+  function beforeUnloadCancelled(): boolean {
+    const event = new Event('beforeunload', { cancelable: true })
+    window.dispatchEvent(event)
+    return event.defaultPrevented
+  }
+
+  it('annule la fermeture de l’onglet seulement avec des changements', async () => {
+    renderDetail()
+    const title = await waitForForm()
+    expect(beforeUnloadCancelled()).toBe(false)
+
+    await userEvent.type(title, ' bis')
+
+    await waitFor(() => {
+      expect(beforeUnloadCancelled()).toBe(true)
+    })
+  })
+
+  it('redirige vers la connexion sans question quand la session finit pendant un enregistrement', async () => {
+    server.use(
+      http.patch(`${API}/series/:id`, () => new HttpResponse(null, { status: 401 })),
+      http.post(`${API}/auth/refresh`, () => new HttpResponse(null, { status: 401 })),
+    )
+    const { router } = renderDetail()
+    await userEvent.type(await waitForForm(), ' bis')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe('/connexion')
+    })
+    expect(screen.queryByRole('dialog', { name: 'Quitter sans enregistrer ?' })).toBeNull()
+  })
+})
+
+describe('fenêtre de suppression (AC-13)', { timeout: 45_000 }, () => {
+  it('« Annuler » ferme sans rien supprimer et vide la saisie', async () => {
+    const calls = { count: 0 }
+    server.use(
+      http.delete(`${API}/series/:id`, () => {
+        calls.count += 1
+        return HttpResponse.json({})
+      }),
+    )
+    renderDetail()
+    await waitForForm()
+    await userEvent.click(screen.getByRole('button', { name: 'Supprimer la série' }))
+    const dialog = await screen.findByRole('dialog')
+    await userEvent.type(within(dialog).getByRole('textbox'), 'Le Secret')
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Annuler' }))
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull()
+    })
+    await userEvent.click(screen.getByRole('button', { name: 'Supprimer la série' }))
+
+    expect(within(await screen.findByRole('dialog')).getByRole('textbox')).toHaveValue('')
+    expect(calls.count).toBe(0)
+  })
+})
