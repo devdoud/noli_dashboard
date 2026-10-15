@@ -103,7 +103,7 @@ Gérer les épisodes d'une série, rangés par saison, et leur donner leur vidé
 **Done when:** un admin ajoute un épisode (saison, numéro, titre, durée), envoie son fichier vidéo et le voit passer à « Prête », le modifie et le supprime après confirmation ; un doublon saison et numéro est refusé clairement ; l'état de chaque vidéo (`ready`, `pending`, `error`, `legacy`, `none`) est affiché ; les anciens liens collés se migrent vers l'hébergement.
 - [x] Design it (spec): `/architect épisodes`
 - [ ] Build it: `/develop épisodes`
-   - [ ] Prérequis backend : import du lien collé stocké (`fromPastedLink`), API redéployée (AC-8)
+   - [x] Prérequis backend : import du lien collé stocké (`fromPastedLink`), API redéployée (AC-8)
    - [x] Section et informations : tableaux par saison, états, accès, fenêtre d'ajout et de modification, doublon (AC-1 à AC-6, AC-11, AC-12)
    - [x] Vidéos : envoi simple et tus en arrière plan, vérification, import, migration, remplacement, retrait, publication (AC-4, AC-7 à AC-10, AC-13)
    - [ ] Suppression, protections, erreurs, accessibilité, puis mise en ligne contrôlée en lecture seule (AC-14 à AC-18)
