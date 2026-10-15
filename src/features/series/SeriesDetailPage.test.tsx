@@ -65,7 +65,7 @@ describe('fiche d’une série (AC-6)', { timeout: 45_000 }, () => {
     ).toBeVisible()
     expect(document.title).toBe('Le Secret du Docteur Mensah · Noli Admin')
     expect(screen.getByText('8,6 (268)')).toBeInTheDocument()
-    expect(screen.getByText('Épisodes').nextSibling).toHaveTextContent('8')
+    expect(screen.getByText('Épisodes', { selector: 'p' }).nextSibling).toHaveTextContent('8')
     expect(screen.getByRole('link', { name: 'Retour aux séries' })).toHaveAttribute(
       'href',
       '/series?page=2',

@@ -6,8 +6,12 @@ import {
   allCategoriesSchema,
   deleteSeriesResponseSchema,
   seriesPageSchema,
+  videoImportSchema,
+  videoUploadLinkSchema,
   type AdminSeries,
+  type VideoUploadLink,
 } from '@/features/series/schemas'
+import type { EpisodeCreatePayload, EpisodePatch } from '@/features/series/episodes/episodeForm'
 import type { SeriesCreatePayload, SeriesPatch } from '@/features/series/seriesPayload'
 import { apiRequest } from '@/shared/api/client'
 
@@ -42,7 +46,12 @@ export function useSeriesPage(page: number) {
 }
 
 /** Fiche admin d'une série ; désactivée pour un identifiant mal formé (AC-6). */
-export function useSeriesDetail(id: string, enabled: boolean) {
+export function useSeriesDetail(
+  id: string,
+  enabled: boolean,
+  // Relecture automatique tant qu'une vidéo est attendue (spec 0006, AC-9).
+  refetchInterval: (series: AdminSeries | undefined) => number | false = () => false,
+) {
   return useQuery({
     queryKey: seriesKeys.detail(id),
     queryFn: async ({ signal }) => {
@@ -57,6 +66,7 @@ export function useSeriesDetail(id: string, enabled: boolean) {
     enabled,
     staleTime: DETAIL_STALE_TIME_MS,
     refetchOnWindowFocus: false,
+    refetchInterval: (query) => refetchInterval(query.state.data),
   })
 }
 
@@ -103,4 +113,99 @@ export async function deleteSeries(id: string): Promise<void> {
     path: `/series/${id}`,
     schema: deleteSeriesResponseSchema,
   })
+}
+
+// Épisodes et vidéos (spec 0006) : chaque écriture renvoie la série admin à jour.
+
+function episodePath(id: string, seasonNumber: number, episodeNumber: number): string {
+  return `/series/${id}/episodes/${String(seasonNumber)}/${String(episodeNumber)}`
+}
+
+async function seriesWrite(
+  method: 'POST' | 'PATCH' | 'DELETE',
+  path: string,
+  body?: unknown,
+): Promise<AdminSeries> {
+  const response = await apiRequest({ method, path, body, schema: adminSeriesResponseSchema })
+  return response.series
+}
+
+export function addEpisode(id: string, payload: EpisodeCreatePayload): Promise<AdminSeries> {
+  return seriesWrite('POST', `/series/${id}/episodes`, payload)
+}
+
+export function updateEpisode(
+  id: string,
+  seasonNumber: number,
+  episodeNumber: number,
+  patch: EpisodePatch,
+): Promise<AdminSeries> {
+  return seriesWrite('PATCH', episodePath(id, seasonNumber, episodeNumber), patch)
+}
+
+export function deleteEpisode(
+  id: string,
+  seasonNumber: number,
+  episodeNumber: number,
+): Promise<AdminSeries> {
+  return seriesWrite('DELETE', episodePath(id, seasonNumber, episodeNumber))
+}
+
+/** Lien d'envoi à usage unique vers Cloudflare (méthode post jusqu'à 200 Mo, tus au delà). */
+export function requestVideoUpload(
+  id: string,
+  seasonNumber: number,
+  episodeNumber: number,
+  uploadLength: number,
+): Promise<VideoUploadLink> {
+  return apiRequest({
+    method: 'POST',
+    path: `${episodePath(id, seasonNumber, episodeNumber)}/video/upload`,
+    body: { uploadLength },
+    schema: videoUploadLinkSchema,
+  })
+}
+
+export async function importVideo(
+  id: string,
+  seasonNumber: number,
+  episodeNumber: number,
+  url: string,
+): Promise<void> {
+  await apiRequest({
+    method: 'POST',
+    path: `${episodePath(id, seasonNumber, episodeNumber)}/video/import`,
+    body: { url: url.trim() },
+    schema: videoImportSchema,
+  })
+}
+
+/** Migration : le backend importe le lien collé qu'il a déjà, sans le renvoyer (AC-8). */
+export async function importPastedVideo(
+  id: string,
+  seasonNumber: number,
+  episodeNumber: number,
+): Promise<void> {
+  await apiRequest({
+    method: 'POST',
+    path: `${episodePath(id, seasonNumber, episodeNumber)}/video/import`,
+    body: { fromPastedLink: true },
+    schema: videoImportSchema,
+  })
+}
+
+export function refreshVideo(
+  id: string,
+  seasonNumber: number,
+  episodeNumber: number,
+): Promise<AdminSeries> {
+  return seriesWrite('POST', `${episodePath(id, seasonNumber, episodeNumber)}/video/refresh`)
+}
+
+export function removeVideo(
+  id: string,
+  seasonNumber: number,
+  episodeNumber: number,
+): Promise<AdminSeries> {
+  return seriesWrite('DELETE', `${episodePath(id, seasonNumber, episodeNumber)}/video`)
 }
