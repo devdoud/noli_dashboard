@@ -18,7 +18,7 @@ _Ce sont des recommandations pour garder une construction ordonnée, pas des obl
 | 5 | Connexion admin et liste des séries | Slice 1 | done |
 | 6 | Fiche série | Slice 2 | done |
 | 7 | Épisodes | Slice 3 | in-progress |
-| 8 | Images | Slice 4 | planned |
+| 8 | Images | Slice 4 | in-progress |
 | 9 | Catégories | Slice 5 | planned |
 | 10 | Recherche et filtres | Slice 6 | planned |
 | 11 | Vue d'ensemble | Slice 7 | planned |
@@ -113,10 +113,19 @@ Spec [0006](../specs/0006-episodes/index.md) · Code `src/features/series/episod
 
 ## Slice 4: Images
 
-### 8. Images · needs a decision
+### 8. Images · in-progress
 Envoyer et retirer la couverture, la bannière et la vignette d'épisode, avec aperçu et contrôle du format avant l'envoi.
 **Done when:** un admin envoie puis retire chaque image ; le format (JPEG, PNG, WebP), la taille (5 Mo) et les dimensions minimales sont vérifiés avant l'envoi ; la limite de 10 envois en 10 minutes s'affiche clairement.
-- [ ] Design it (spec): `/architect images`
+- [x] Design it (spec): `/architect images`
+- [ ] Build it: `/develop images`
+   - [ ] Règles et API : schéma de la vignette, routes et hooks de mutation, table des emplacements, contrôles du fichier, messages d'erreur (AC-3, AC-4, AC-8)
+   - [ ] Couverture de bout en bout : section « Images », choix, aperçu, envoi, retrait avec confirmation, essai réel en local (AC-1 à AC-5)
+   - [ ] Bannière, vignette dans la fenêtre d'épisode et dans le tableau (AC-1, AC-6)
+   - [ ] Dépôt de fichier, liens externes, refus du backend, protections, accessibilité, écran étroit (AC-2, AC-7 à AC-11)
+   - [ ] Mise en ligne du dashboard et contrôle en production en lecture seule (AC-12)
+- [ ] Verify it: `/check verify images`
+- [ ] Test it: `/test images`
+Spec [0007](../specs/0007-images/index.md)
 
 ## Slice 5: Catégories
 
@@ -154,6 +163,8 @@ Hors de ce passage, gardé pour que le plan reste honnête.
 - **Journal d'audit des séries**: tracer créations et suppressions côté backend, si le nombre d'admins grandit · from spec 0005
 - **Conflits d'écriture**: prévenir quand deux admins modifient la même série en même temps · from spec 0005
 - **Déplacer un épisode**: changer sa saison ou son numéro sans perdre l'historique de visionnage · from spec 0006
+- **Compteur réel de la limite d'envois**: le backend expose ses en têtes de limite au navigateur, le dashboard affiche les envois restants · from spec 0007
+- **Choisir le cadrage d'une image**: outil de recadrage, ou cadrage centré côté backend, si l'aperçu centré gêne · from spec 0007
 
 ## Legend
 
