@@ -19,7 +19,7 @@ _Ce sont des recommandations pour garder une construction ordonnée, pas des obl
 | 6 | Fiche série | Slice 2 | done |
 | 7 | Épisodes | Slice 3 | done |
 | 8 | Images | Slice 4 | done |
-| 9 | Catégories | Slice 5 | in-progress |
+| 9 | Catégories | Slice 5 | done |
 | 10 | Recherche et filtres | Slice 6 | planned |
 | 11 | Vue d'ensemble | Slice 7 | planned |
 | 12 | Notification de test | Slice 8 | planned |
@@ -129,7 +129,7 @@ Spec [0007](../specs/0007-images/index.md) · Code `src/features/series/images/`
 
 ## Slice 5: Catégories
 
-### 9. Catégories · in-progress
+### 9. Catégories · done
 Gérer toutes les catégories, masquées comprises : créer, modifier, masquer, réordonner, supprimer, et leur image carrée.
 **Done when:** un admin crée, renomme, masque et réordonne les catégories et en change l'image ; supprimer une catégorie encore utilisée affiche pourquoi c'est refusé ; un nom trop proche d'un existant est refusé clairement.
 - [x] Design it (spec): `/architect catégories`
