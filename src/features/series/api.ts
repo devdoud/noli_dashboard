@@ -1,5 +1,5 @@
-// Lectures et écritures des séries (specs 0004 et 0005), par le client API partagé.
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+// Lectures et écritures des séries (specs 0004 à 0007), par le client API partagé.
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { SERIES_PAGE_SIZE } from '@/features/series/page'
 import {
   adminSeriesResponseSchema,
@@ -14,6 +14,7 @@ import {
 import type { EpisodeCreatePayload, EpisodePatch } from '@/features/series/episodes/episodeForm'
 import type { SeriesCreatePayload, SeriesPatch } from '@/features/series/seriesPayload'
 import { apiRequest } from '@/shared/api/client'
+import { isApiError } from '@/shared/api/errors'
 
 export const seriesKeys = {
   all: ['series'] as const,
@@ -122,7 +123,7 @@ function episodePath(id: string, seasonNumber: number, episodeNumber: number): s
 }
 
 async function seriesWrite(
-  method: 'POST' | 'PATCH' | 'DELETE',
+  method: 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   path: string,
   body?: unknown,
 ): Promise<AdminSeries> {
@@ -208,4 +209,58 @@ export function removeVideo(
   episodeNumber: number,
 ): Promise<AdminSeries> {
   return seriesWrite('DELETE', `${episodePath(id, seasonNumber, episodeNumber)}/video`)
+}
+
+// Images (spec 0007) : un emplacement = une route PUT (envoi, champ multipart « file ») et une DELETE.
+
+export type ImageTarget =
+  | { readonly kind: 'cover' | 'banner' }
+  | { readonly kind: 'thumbnail'; readonly seasonNumber: number; readonly episodeNumber: number }
+
+function imagePath(id: string, target: ImageTarget): string {
+  return target.kind === 'thumbnail'
+    ? `${episodePath(id, target.seasonNumber, target.episodeNumber)}/thumbnail`
+    : `/series/${id}/${target.kind}`
+}
+
+export function uploadImage(id: string, target: ImageTarget, file: File): Promise<AdminSeries> {
+  const body = new FormData()
+  body.append('file', file)
+  return seriesWrite('PUT', imagePath(id, target), body)
+}
+
+export function removeImage(id: string, target: ImageTarget): Promise<AdminSeries> {
+  return seriesWrite('DELETE', imagePath(id, target))
+}
+
+/**
+ * Envoi et retrait d'une image. Le cache est mis à jour ici, même si l'emplacement a été démonté
+ * entre temps ; un 409 ou un 404 fait relire la fiche (la réponse ne porte pas de série).
+ */
+export function useImageMutations(id: string, target: ImageTarget) {
+  const queryClient = useQueryClient()
+  const onSuccess = (series: AdminSeries) => {
+    queryClient.setQueryData(seriesKeys.detail(id), series)
+    void queryClient.invalidateQueries({ queryKey: seriesKeys.lists })
+  }
+  const onError = (error: unknown) => {
+    if (
+      isApiError(error) &&
+      error.kind === 'http' &&
+      (error.status === 409 || error.status === 404)
+    ) {
+      void queryClient.invalidateQueries({ queryKey: seriesKeys.detail(id) })
+    }
+  }
+  const upload = useMutation({
+    mutationFn: (file: File) => uploadImage(id, target, file),
+    onSuccess,
+    onError,
+  })
+  const remove = useMutation({
+    mutationFn: () => removeImage(id, target),
+    onSuccess,
+    onError,
+  })
+  return { upload, remove }
 }

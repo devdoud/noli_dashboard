@@ -70,6 +70,8 @@ export const adminEpisodeSchema = z.object({
     .nullish()
     .transform((value) => value ?? false),
   video: adminEpisodeVideoSchema.nullish(),
+  /** Vignette 16:9 (spec 0007) : URL, ou null sans vignette. */
+  thumbnail: z.string().nullish(),
 })
 
 // Réponses admin d'une série (spec 0005, « Data model sketch ») : mêmes champs tolérants, plus ceux
