@@ -19,7 +19,7 @@ _Ce sont des recommandations pour garder une construction ordonnée, pas des obl
 | 6 | Fiche série | Slice 2 | done |
 | 7 | Épisodes | Slice 3 | done |
 | 8 | Images | Slice 4 | done |
-| 9 | Catégories | Slice 5 | planned |
+| 9 | Catégories | Slice 5 | in-progress |
 | 10 | Recherche et filtres | Slice 6 | planned |
 | 11 | Vue d'ensemble | Slice 7 | planned |
 | 12 | Notification de test | Slice 8 | planned |
@@ -129,10 +129,19 @@ Spec [0007](../specs/0007-images/index.md) · Code `src/features/series/images/`
 
 ## Slice 5: Catégories
 
-### 9. Catégories · needs a decision
+### 9. Catégories · in-progress
 Gérer toutes les catégories, masquées comprises : créer, modifier, masquer, réordonner, supprimer, et leur image carrée.
 **Done when:** un admin crée, renomme, masque et réordonne les catégories et en change l'image ; supprimer une catégorie encore utilisée affiche pourquoi c'est refusé ; un nom trop proche d'un existant est refusé clairement.
-- [ ] Design it (spec): `/architect catégories`
+- [x] Design it (spec): `/architect catégories`
+- [ ] Build it: `/develop catégories`
+   - [ ] Briques partagées : emplacement d'image, protection de la page, liste des catégories et clés de cache dans `src/shared/`, sans changement pour les séries (AC-9 à AC-11)
+   - [ ] Règles et page : `slugify` et contrôles du nom et de l'adresse, page `/categories` et menu, création de bout en bout (AC-1 à AC-3, AC-10)
+   - [ ] Modification, adresse, visibilité avec confirmation, ordre enregistré en un envoi, suppression avec « Masquer plutôt » (AC-4 à AC-8)
+   - [ ] Image de catégorie, protections, accessibilité, écran étroit (AC-9, AC-11 à AC-13)
+   - [ ] Base locale séparée de la production, essais réels, mise en ligne et contrôle en production en lecture seule (AC-14)
+- [ ] Verify it: `/check verify catégories`
+- [ ] Test it: `/test catégories`
+Spec [0008](../specs/0008-categories/index.md)
 
 ## Slice 6: Recherche et filtres
 
@@ -165,6 +174,8 @@ Hors de ce passage, gardé pour que le plan reste honnête.
 - **Déplacer un épisode**: changer sa saison ou son numéro sans perdre l'historique de visionnage · from spec 0006
 - **Compteur réel de la limite d'envois**: le backend expose ses en têtes de limite au navigateur, le dashboard affiche les envois restants · from spec 0007
 - **Choisir le cadrage d'une image**: outil de recadrage, ou cadrage centré côté backend, si l'aperçu centré gêne · from spec 0007
+- **Nombre de séries par catégorie**: colonne « Séries » dans la page des catégories, si le backend expose ce nombre · from spec 0008
+- **Glisser déposer pour l'ordre des catégories**: en plus des boutons, si la liste grandit beaucoup · from spec 0008
 
 ## Legend
 
