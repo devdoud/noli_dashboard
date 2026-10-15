@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 import { API, categoriesHandler, makeAdminSeries, seriesHandler, SERIES_ID } from '@/test/seriesApi'
 
-// Faux backend des épisodes d'une série (spec 0006) : il garde les épisodes, répond aux routes
+// Faux backend des épisodes et des images d'une série (specs 0006 et 0007) : il garde les épisodes, répond aux routes
 // d'épisode et de vidéo comme l'API, et note chaque écriture reçue. Un test peut prendre le pas
 // sur une route avec server.use(...) avant d'agir.
 
@@ -24,6 +24,7 @@ export interface RawEpisode {
   readonly releaseDate?: string
   readonly isFree?: boolean
   readonly video?: RawVideo
+  readonly thumbnail?: string | null
 }
 
 export interface RecordedCall {
@@ -50,6 +51,12 @@ export function makeEpisode(
 }
 
 async function readBody(request: Request): Promise<unknown> {
+  if (request.headers.get('content-type')?.startsWith('multipart/form-data') === true) {
+    const file = (await request.formData()).get('file')
+    return typeof file === 'object' && file !== null
+      ? { file: { name: file.name, size: file.size } }
+      : { file }
+  }
   const text = await request.text()
   if (text === '') return undefined
   try {
@@ -59,11 +66,25 @@ async function readBody(request: Request): Promise<unknown> {
   }
 }
 
-export function episodesBackend(initial: readonly RawEpisode[]) {
-  const state = { episodes: [...initial] }
+export const HOSTED_IMAGE = 'https://res.cloudinary.com/noli/image/upload/v1/noli/test/image.jpg'
+
+export interface SeriesImages {
+  readonly coverImage?: string | null
+  readonly bannerImage?: string | null
+}
+
+export function episodesBackend(initial: readonly RawEpisode[], images: SeriesImages = {}) {
+  const state = {
+    episodes: [...initial],
+    images: { coverImage: null, bannerImage: null, ...images } as SeriesImages,
+  }
   const calls: RecordedCall[] = []
   const series = () =>
-    makeAdminSeries({ episodes: state.episodes, totalEpisodes: state.episodes.length })
+    makeAdminSeries({
+      ...state.images,
+      episodes: state.episodes,
+      totalEpisodes: state.episodes.length,
+    })
   const seriesResponse = () => HttpResponse.json({ message: 'ok', series: series() })
   const find = (s: unknown, e: unknown) =>
     state.episodes.find(
@@ -88,7 +109,36 @@ export function episodesBackend(initial: readonly RawEpisode[]) {
   })
   const episodePath = `${API}/series/:id/episodes/:s/:e`
 
+  const imageSlot = (slot: 'cover' | 'banner') => (slot === 'cover' ? 'coverImage' : 'bannerImage')
+
   const handlers = [
+    http.put(`${API}/series/:id/:slot`, async ({ request, params }) => {
+      if (params.slot !== 'cover' && params.slot !== 'banner') return undefined
+      await record(request)
+      state.images = {
+        ...state.images,
+        [imageSlot(params.slot)]: `${HOSTED_IMAGE}?${String(calls.length)}`,
+      }
+      return seriesResponse()
+    }),
+    http.delete(`${API}/series/:id/:slot`, async ({ request, params }) => {
+      if (params.slot !== 'cover' && params.slot !== 'banner') return undefined
+      await record(request)
+      state.images = { ...state.images, [imageSlot(params.slot)]: null }
+      return seriesResponse()
+    }),
+    http.put(`${episodePath}/thumbnail`, async ({ request, params }) => {
+      await record(request)
+      if (find(params.s, params.e) === undefined) return gone()
+      update(params.s, params.e, (episode) => ({ ...episode, thumbnail: `${HOSTED_IMAGE}?t` }))
+      return seriesResponse()
+    }),
+    http.delete(`${episodePath}/thumbnail`, async ({ request, params }) => {
+      await record(request)
+      if (find(params.s, params.e) === undefined) return gone()
+      update(params.s, params.e, (episode) => ({ ...episode, thumbnail: null }))
+      return seriesResponse()
+    }),
     categoriesHandler(),
     seriesHandler(12),
     http.get(`${API}/series/:id/admin`, () => seriesResponse()),

@@ -60,7 +60,8 @@ async function openEdit(
 }
 
 function fileInput(dialog: HTMLElement): HTMLInputElement {
-  const input = dialog.querySelector<HTMLInputElement>('input[type="file"]')
+  // Le champ de la vidéo, pas celui de la vignette (spec 0007).
+  const input = dialog.querySelector<HTMLInputElement>('input[type="file"][accept="video/*"]')
   if (input === null) throw new Error('Champ fichier introuvable')
   return input
 }
