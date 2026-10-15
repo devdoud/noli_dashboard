@@ -10,6 +10,7 @@ import { POLL_EVERY_MS, shouldPoll } from '@/features/series/episodes/episodeMod
 import { EpisodesSection } from '@/features/series/episodes/EpisodesSection'
 import { useVideoUploads } from '@/features/series/episodes/uploads/uploadsContext'
 import { VideoUploadsProvider } from '@/features/series/episodes/uploads/VideoUploadsProvider'
+import { SeriesImagesSection } from '@/features/series/images/SeriesImagesSection'
 import { backToListPath, isSeriesId, SERIES_LIST_PATH } from '@/features/series/navigation'
 import type { AdminSeries } from '@/features/series/schemas'
 import { SeriesForm } from '@/features/series/SeriesForm'
@@ -68,10 +69,12 @@ function SeriesDetailContent({
   const uploads = useVideoUploads()
   const [guardActive, setGuardActive] = useState(false)
   const [episodeDirty, setEpisodeDirty] = useState(false)
+  const [imagesPending, setImagesPending] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
-  // Formulaire modifié, fenêtre d'épisode modifiée ou envoi en cours (spec 0006, AC-15).
+  // Formulaire modifié, fenêtre d'épisode modifiée, envoi de vidéo en cours (spec 0006, AC-15)
+  // ou image en attente d'envoi (spec 0007, AC-9).
   const guard = useUnsavedChangesGuard(
-    guardActive || episodeDirty || uploads.active,
+    guardActive || episodeDirty || uploads.active || imagesPending,
     uploads.active ? UPLOAD_LEAVE_MESSAGE : undefined,
   )
 
@@ -109,6 +112,7 @@ function SeriesDetailContent({
           </Alert>
         ) : null}
         <SeriesOverview series={series} />
+        <SeriesImagesSection series={series} onPendingChange={setImagesPending} />
         <SeriesForm
           mode="edit"
           base={base}

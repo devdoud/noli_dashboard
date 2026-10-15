@@ -40,6 +40,7 @@ import {
   nextEpisodeNumber,
   suggestedSeason,
 } from '@/features/series/episodes/episodeModel'
+import { EpisodeThumbnail } from '@/features/series/episodes/EpisodeThumbnail'
 import { EpisodeVideoActions } from '@/features/series/episodes/EpisodeVideoActions'
 import { useVideoUploads } from '@/features/series/episodes/uploads/uploadsContext'
 import { useVideoDraft } from '@/features/series/episodes/useVideoDraft'
@@ -142,6 +143,8 @@ export function EpisodeModal({
   )
   const [values, setValues] = useState(base)
   const [pending, setPending] = useState(false)
+  // Vignette choisie mais pas envoyée, ou en cours d'envoi (spec 0007, AC-9).
+  const [thumbnailPending, setThumbnailPending] = useState(false)
   const submitting = useRef(false)
   const asking = useRef(false)
   const numberEdited = useRef(false)
@@ -171,7 +174,10 @@ export function EpisodeModal({
   })
 
   const infoChanged = creating ? form.isDirty() : changedEpisodeFields(base, values).size > 0
-  const dirty = infoChanged || (creating && (hasVideo(video.draft) || video.draft.link !== ''))
+  const dirty =
+    infoChanged ||
+    thumbnailPending ||
+    (creating && (hasVideo(video.draft) || video.draft.link !== ''))
   useEffect(() => {
     onDirtyChange(dirty)
   }, [dirty, onDirtyChange])
@@ -493,6 +499,13 @@ export function EpisodeModal({
         {/* Hors du formulaire : Entrée dans le lien n'enregistre pas les informations. */}
         {live === undefined ? null : (
           <>
+            <Divider />
+            <EpisodeThumbnail
+              seriesId={series._id}
+              episode={live}
+              onPendingChange={setThumbnailPending}
+              onGone={onClose}
+            />
             <Divider />
             <EpisodeVideoActions
               series={series}
