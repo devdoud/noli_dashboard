@@ -1,7 +1,7 @@
 # 0006. Épisodes d'une série et envoi de leurs vidéos
 
 **Date**: 2026-10-15
-**Status**: In Progress
+**Status**: Accepted
 
 ## Summary
 

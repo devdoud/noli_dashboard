@@ -17,8 +17,8 @@ _Ce sont des recommandations pour garder une construction ordonnée, pas des obl
 | 4 | Design system & UI foundation | Foundation | done |
 | 5 | Connexion admin et liste des séries | Slice 1 | done |
 | 6 | Fiche série | Slice 2 | done |
-| 7 | Épisodes | Slice 3 | in-progress |
-| 8 | Images | Slice 4 | in-progress |
+| 7 | Épisodes | Slice 3 | done |
+| 8 | Images | Slice 4 | done |
 | 9 | Catégories | Slice 5 | planned |
 | 10 | Recherche et filtres | Slice 6 | planned |
 | 11 | Vue d'ensemble | Slice 7 | planned |
@@ -98,7 +98,7 @@ Spec [0005](../specs/0005-fiche-serie/index.md) · code in `src/features/series/
 
 ## Slice 3: Épisodes
 
-### 7. Épisodes · in-progress
+### 7. Épisodes · done
 Gérer les épisodes d'une série, rangés par saison, et leur donner leur vidéo en l'envoyant vers l'hébergement vidéo (ou en l'important depuis un lien), avec l'état de chaque vidéo visible.
 **Done when:** un admin ajoute un épisode (saison, numéro, titre, durée), envoie son fichier vidéo et le voit passer à « Prête », le modifie et le supprime après confirmation ; un doublon saison et numéro est refusé clairement ; l'état de chaque vidéo (`ready`, `pending`, `error`, `legacy`, `none`) est affiché ; les anciens liens collés se migrent vers l'hébergement.
 - [x] Design it (spec): `/architect épisodes`
@@ -113,7 +113,7 @@ Spec [0006](../specs/0006-episodes/index.md) · Code `src/features/series/episod
 
 ## Slice 4: Images
 
-### 8. Images · in-progress
+### 8. Images · done
 Envoyer et retirer la couverture, la bannière et la vignette d'épisode, avec aperçu et contrôle du format avant l'envoi.
 **Done when:** un admin envoie puis retire chaque image ; le format (JPEG, PNG, WebP), la taille (5 Mo) et les dimensions minimales sont vérifiés avant l'envoi ; la limite de 10 envois en 10 minutes s'affiche clairement.
 - [x] Design it (spec): `/architect images`

@@ -1,7 +1,7 @@
 # 0007. Images de série et vignettes d'épisode
 
 **Date**: 2026-10-15
-**Status**: In Progress
+**Status**: Accepted
 
 ## Summary
 
