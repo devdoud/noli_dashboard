@@ -2,6 +2,7 @@ import type { RouteObject } from 'react-router'
 import { HomePage } from '@/app/HomePage'
 import { NotFoundPage } from '@/app/NotFoundPage'
 import { LoginPage } from '@/features/auth/LoginPage'
+import { CategoriesPage } from '@/features/categories/CategoriesPage'
 import { SeriesCreatePage } from '@/features/series/SeriesCreatePage'
 import { SeriesDetailPage } from '@/features/series/SeriesDetailPage'
 import { SeriesListPage } from '@/features/series/SeriesListPage'
@@ -34,6 +35,7 @@ export const routes: RouteObject[] = [
           { path: 'series', element: <SeriesListPage /> },
           { path: 'series/nouvelle', element: <SeriesCreatePage /> },
           { path: 'series/:id', element: <SeriesDetailPage /> },
+          { path: 'categories', element: <CategoriesPage /> },
           ...devRoutes,
           { path: '*', element: <NotFoundPage /> },
         ],
