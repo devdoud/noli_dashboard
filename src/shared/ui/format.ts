@@ -24,9 +24,25 @@ function toDate(iso: string | null | undefined): Date | undefined {
   return Number.isNaN(date.getTime()) ? undefined : date
 }
 
-export function formatDate(iso: string | null | undefined): string {
+const utcDateFormat = new Intl.DateTimeFormat('fr-FR', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+})
+
+export interface FormatDateOptions {
+  /** `'UTC'` : le jour tel qu'enregistré, quel que soit le fuseau du navigateur (spec 0006). */
+  readonly timeZone?: 'UTC'
+}
+
+export function formatDate(
+  iso: string | null | undefined,
+  options: FormatDateOptions = {},
+): string {
   const date = toDate(iso)
-  return date === undefined ? MISSING_VALUE : dateFormat.format(date)
+  if (date === undefined) return MISSING_VALUE
+  return (options.timeZone === 'UTC' ? utcDateFormat : dateFormat).format(date)
 }
 
 export function formatDateTime(iso: string | null | undefined): string {

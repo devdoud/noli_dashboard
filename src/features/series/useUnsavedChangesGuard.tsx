@@ -11,7 +11,13 @@ export interface UnsavedChangesGuard {
   readonly modal: ReactNode
 }
 
-export function useUnsavedChangesGuard(active: boolean): UnsavedChangesGuard {
+export const UNSAVED_CHANGES_MESSAGE = 'Vos changements seront perdus.'
+
+export function useUnsavedChangesGuard(
+  active: boolean,
+  // Texte de la question : un envoi de vidéo en cours a le sien (spec 0006, AC-15).
+  message: string = UNSAVED_CHANGES_MESSAGE,
+): UnsavedChangesGuard {
   const allowed = useRef(false)
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
@@ -49,7 +55,7 @@ export function useUnsavedChangesGuard(active: boolean): UnsavedChangesGuard {
       title="Quitter sans enregistrer ?"
       centered
     >
-      <Text size="sm">Vos changements seront perdus.</Text>
+      <Text size="sm">{message}</Text>
       <Group justify="flex-end" mt="lg">
         <Button
           variant="default"

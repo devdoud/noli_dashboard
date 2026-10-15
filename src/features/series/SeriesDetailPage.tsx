@@ -1,11 +1,15 @@
-// Fiche d'une série : aperçu, formulaire, suppression (spec 0005, AC-6 à AC-14).
-import { Anchor, Button, Group, Paper, Skeleton, Stack, Text, Title } from '@mantine/core'
+// Fiche d'une série : aperçu, formulaire, épisodes, suppression (spec 0005, spec 0006).
+import { Alert, Anchor, Button, Group, Paper, Skeleton, Stack, Text, Title } from '@mantine/core'
 import { IconArrowLeft, IconTrash } from '@tabler/icons-react'
 import { useQueryClient } from '@tanstack/react-query'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import { seriesKeys, updateSeries, useSeriesDetail } from '@/features/series/api'
 import { DeleteSeriesModal, type DeleteOutcome } from '@/features/series/DeleteSeriesModal'
+import { POLL_EVERY_MS, shouldPoll } from '@/features/series/episodes/episodeModel'
+import { EpisodesSection } from '@/features/series/episodes/EpisodesSection'
+import { useVideoUploads } from '@/features/series/episodes/uploads/uploadsContext'
+import { VideoUploadsProvider } from '@/features/series/episodes/uploads/VideoUploadsProvider'
 import { backToListPath, isSeriesId, SERIES_LIST_PATH } from '@/features/series/navigation'
 import type { AdminSeries } from '@/features/series/schemas'
 import { SeriesForm } from '@/features/series/SeriesForm'
@@ -46,19 +50,30 @@ function SeriesNotFound({ listPath }: { readonly listPath: string }) {
   )
 }
 
+export const UPLOAD_LEAVE_MESSAGE = "Un envoi de vidéo est en cours. Quitter l'arrêtera."
+export const REFRESH_FAILED_MESSAGE = "La fiche n'a pas pu être actualisée."
+
 function SeriesDetailContent({
   series,
   listPath,
+  refreshFailed,
 }: {
   readonly series: AdminSeries
   readonly listPath: string
+  readonly refreshFailed: boolean
 }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [base, setBase] = useState<SeriesFormValues>(() => toFormValues(series))
+  const uploads = useVideoUploads()
   const [guardActive, setGuardActive] = useState(false)
+  const [episodeDirty, setEpisodeDirty] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
-  const guard = useUnsavedChangesGuard(guardActive)
+  // Formulaire modifié, fenêtre d'épisode modifiée ou envoi en cours (spec 0006, AC-15).
+  const guard = useUnsavedChangesGuard(
+    guardActive || episodeDirty || uploads.active,
+    uploads.active ? UPLOAD_LEAVE_MESSAGE : undefined,
+  )
 
   const submit = useCallback(
     async (values: SeriesFormValues) => {
@@ -88,6 +103,11 @@ function SeriesDetailContent({
       <BackLink to={listPath} />
       <PageHeader title={series.title} />
       <Stack gap="lg">
+        {refreshFailed ? (
+          <Alert color="noliRed" role="status">
+            <Text size="sm">{REFRESH_FAILED_MESSAGE}</Text>
+          </Alert>
+        ) : null}
         <SeriesOverview series={series} />
         <SeriesForm
           mode="edit"
@@ -100,6 +120,11 @@ function SeriesDetailContent({
           listPath={listPath}
           onLeaveGone={guard.allowLeave}
           knownCategories={series.categories}
+        />
+        <EpisodesSection
+          series={series}
+          onDirtyChange={setEpisodeDirty}
+          onLeave={guard.allowLeave}
         />
         <Paper
           withBorder
@@ -150,19 +175,41 @@ function DetailSkeleton() {
   )
 }
 
-export function SeriesDetailPage() {
-  const { id } = useParams()
-  const location = useLocation()
-  const listPath = backToListPath(location.state)
-  const valid = isSeriesId(id)
-  const query = useSeriesDetail(id ?? '', valid)
+function SeriesDetailBody({ id, listPath }: { readonly id: string; readonly listPath: string }) {
+  const uploads = useVideoUploads()
+  const query = useSeriesDetail(id, true, (series) =>
+    series !== undefined && shouldPoll(series.episodes, uploads.expectsVideo)
+      ? POLL_EVERY_MS
+      : false,
+  )
   usePageTitle(query.data?.title ?? 'Série')
+  const { data, dataUpdatedAt } = query
+  const { sync } = uploads
 
-  if (!valid) return <SeriesNotFound listPath={listPath} />
+  // Chaque relecture rapproche les envois de la fiche (autre admin, épisode disparu, encodage).
+  useEffect(() => {
+    if (data !== undefined) sync(data, dataUpdatedAt)
+  }, [data, dataUpdatedAt, sync])
+
+  const notFound =
+    query.isError &&
+    isApiError(query.error) &&
+    query.error.kind === 'http' &&
+    query.error.status === 404
+  if (notFound) return <SeriesNotFound listPath={listPath} />
+  // Une relecture en échec garde la fiche affichée, avec un bandeau.
+  if (data !== undefined) {
+    // key : la fiche repart de zéro quand on passe d'une série à une autre.
+    return (
+      <SeriesDetailContent
+        key={data._id}
+        series={data}
+        listPath={listPath}
+        refreshFailed={query.isError}
+      />
+    )
+  }
   if (query.isError) {
-    const notFound =
-      isApiError(query.error) && query.error.kind === 'http' && query.error.status === 404
-    if (notFound) return <SeriesNotFound listPath={listPath} />
     return (
       <>
         <BackLink to={listPath} />
@@ -170,7 +217,23 @@ export function SeriesDetailPage() {
       </>
     )
   }
-  if (query.data === undefined) return <DetailSkeleton />
-  // key : la fiche repart de zéro quand on passe d'une série à une autre.
-  return <SeriesDetailContent key={query.data._id} series={query.data} listPath={listPath} />
+  return <DetailSkeleton />
+}
+
+export function SeriesDetailPage() {
+  const { id } = useParams()
+  const location = useLocation()
+  const listPath = backToListPath(location.state)
+
+  if (!isSeriesId(id)) return <InvalidSeries listPath={listPath} />
+  // Les envois vivent avec la fiche de cette série ; quitter la fiche les arrête.
+  return (
+    <VideoUploadsProvider key={id} seriesId={id}>
+      <SeriesDetailBody id={id} listPath={listPath} />
+    </VideoUploadsProvider>
+  )
+}
+
+function InvalidSeries({ listPath }: { readonly listPath: string }) {
+  return <SeriesNotFound listPath={listPath} />
 }
