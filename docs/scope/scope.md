@@ -108,7 +108,7 @@ Gérer les épisodes d'une série, rangés par saison, et leur donner leur vidé
    - [x] Vidéos : envoi simple et tus en arrière plan, vérification, import, migration, remplacement, retrait, publication (AC-4, AC-7 à AC-10, AC-13)
    - [x] Suppression, protections, erreurs, accessibilité, puis mise en ligne contrôlée en lecture seule (AC-14 à AC-18)
 - [x] Verify it: `/check verify épisodes`
-- [ ] Test it: `/test épisodes`
+- [x] Test it: `/test épisodes`
 Spec [0006](../specs/0006-episodes/index.md) · Code `src/features/series/episodes/`
 
 ## Slice 4: Images
