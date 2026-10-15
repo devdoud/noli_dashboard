@@ -603,3 +603,96 @@ describe('cas limites de la revue (AC-5, AC-7, AC-9, AC-10, AC-12)', { timeout: 
     expect(backend.callsTo('DELETE', '/categories/cat0/image')).toHaveLength(1)
   })
 })
+
+describe('compléments (AC-8, AC-9, AC-10)', { timeout: 45_000 }, () => {
+  it('propose aussitôt la catégorie créée dans le formulaire de série (AC-10)', async () => {
+    const user = userEvent.setup()
+    const { router } = await openPage()
+    await user.click(screen.getByRole('button', { name: 'Nouvelle catégorie' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Nouvelle catégorie' })
+    await user.type(within(dialog).getByRole('textbox', { name: /^Nom/ }), 'Polar')
+    await user.click(within(dialog).getByRole('button', { name: 'Créer la catégorie' }))
+    await screen.findByText('Catégorie créée.')
+
+    act(() => {
+      void router.navigate('/series/nouvelle')
+    })
+    // Le champ des catégories du formulaire de série (spec 0005) : désactivé pendant le chargement.
+    const field = await waitFor(() => {
+      const input = document.getElementById('serie-categoryIds')
+      if (input === null) throw new Error('Champ Catégories introuvable')
+      expect(input).toBeEnabled()
+      return input
+    })
+    await user.click(field)
+    await user.type(field, 'Pol')
+
+    // L'option est dans la liste ouverte ; jsdom la croit cachée pendant l'animation de Mantine.
+    expect(await screen.findByRole('option', { name: 'Polar', hidden: true })).toBeInTheDocument()
+  })
+
+  it('dit « des séries » quand le backend ne donne pas le nombre (AC-8)', async () => {
+    const user = userEvent.setup()
+    await openPage()
+    server.use(
+      http.delete(`${API}/categories/:id`, () =>
+        HttpResponse.json({ message: 'in use', code: 'CATEGORY_IN_USE' }, { status: 409 }),
+      ),
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Supprimer « Comédie »' }))
+    await user.click(
+      within(await screen.findByRole('dialog', { name: 'Supprimer « Comédie » ?' })).getByRole(
+        'button',
+        { name: 'Supprimer' },
+      ),
+    )
+
+    const refused = await screen.findByRole('dialog', { name: 'Suppression impossible' })
+    expect(
+      within(refused).getByText(
+        '« Comédie » est encore utilisée par des séries. Retirez-la de ces séries, ou masquez-la.',
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('ne propose pas « Masquer plutôt » pour une catégorie déjà masquée (AC-8)', async () => {
+    const user = userEvent.setup()
+    await openPage(DEFAULT, { cat2: 1 })
+
+    await user.click(screen.getByRole('button', { name: 'Supprimer « Bientôt »' }))
+    await user.click(
+      within(await screen.findByRole('dialog', { name: 'Supprimer « Bientôt » ?' })).getByRole(
+        'button',
+        { name: 'Supprimer' },
+      ),
+    )
+
+    const refused = await screen.findByRole('dialog', { name: 'Suppression impossible' })
+    expect(within(refused).getByText(/encore utilisée par 1 série\./)).toBeInTheDocument()
+    expect(
+      within(refused).queryByRole('button', { name: 'Masquer plutôt' }),
+    ).not.toBeInTheDocument()
+    expect(within(refused).getByRole('button', { name: 'Fermer' })).toHaveFocus()
+  })
+
+  it('refuse une image de catégorie trop petite sans appel (AC-9)', async () => {
+    const user = userEvent.setup()
+    const { backend } = await openPage()
+    dimensions.mockResolvedValue({ width: 300, height: 300 })
+    await user.click(screen.getByRole('button', { name: 'Modifier « Drame »' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Modifier « Drame »' })
+    const slot = within(dialog).getByRole('group', { name: 'Image' })
+    const input = slot.querySelector<HTMLInputElement>('input[type="file"]')
+    if (input === null) throw new Error('Champ fichier introuvable')
+
+    await user.upload(input, new File([new Uint8Array(64)], 'petit.png', { type: 'image/png' }))
+
+    expect(
+      await within(slot).findByText(
+        'Image trop petite : 400 × 400 px au moins (reçue : 300 × 300).',
+      ),
+    ).toBeInTheDocument()
+    expect(backend.calls).toEqual([])
+  })
+})
