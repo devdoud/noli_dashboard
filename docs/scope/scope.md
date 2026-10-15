@@ -102,12 +102,12 @@ Spec [0005](../specs/0005-fiche-serie/index.md) · code in `src/features/series/
 Gérer les épisodes d'une série, rangés par saison, et leur donner leur vidéo en l'envoyant vers l'hébergement vidéo (ou en l'important depuis un lien), avec l'état de chaque vidéo visible.
 **Done when:** un admin ajoute un épisode (saison, numéro, titre, durée), envoie son fichier vidéo et le voit passer à « Prête », le modifie et le supprime après confirmation ; un doublon saison et numéro est refusé clairement ; l'état de chaque vidéo (`ready`, `pending`, `error`, `legacy`, `none`) est affiché ; les anciens liens collés se migrent vers l'hébergement.
 - [x] Design it (spec): `/architect épisodes`
-- [ ] Build it: `/develop épisodes`
+- [x] Build it: `/develop épisodes`
    - [x] Prérequis backend : import du lien collé stocké (`fromPastedLink`), API redéployée (AC-8)
    - [x] Section et informations : tableaux par saison, états, accès, fenêtre d'ajout et de modification, doublon (AC-1 à AC-6, AC-11, AC-12)
    - [x] Vidéos : envoi simple et tus en arrière plan, vérification, import, migration, remplacement, retrait, publication (AC-4, AC-7 à AC-10, AC-13)
-   - [ ] Suppression, protections, erreurs, accessibilité, puis mise en ligne contrôlée en lecture seule (AC-14 à AC-18)
-- [ ] Verify it: `/check verify épisodes`
+   - [x] Suppression, protections, erreurs, accessibilité, puis mise en ligne contrôlée en lecture seule (AC-14 à AC-18)
+- [x] Verify it: `/check verify épisodes`
 - [ ] Test it: `/test épisodes`
 Spec [0006](../specs/0006-episodes/index.md) · Code `src/features/series/episodes/`
 
