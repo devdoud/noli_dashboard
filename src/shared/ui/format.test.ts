@@ -38,6 +38,17 @@ describe('formatDate et formatDateTime (AC-11)', () => {
   })
 })
 
+describe('formatDate en UTC (spec 0006)', () => {
+  it('affiche le jour enregistré, sans décalage du fuseau du navigateur', () => {
+    expect(formatDate('2026-10-20T23:30:00.000Z', { timeZone: 'UTC' })).toBe('20 oct. 2026')
+    expect(formatDate('2026-10-20T00:30:00.000Z', { timeZone: 'UTC' })).toBe('20 oct. 2026')
+  })
+
+  it('affiche « — » pour une date absente', () => {
+    expect(formatDate(null, { timeZone: 'UTC' })).toBe(MISSING_VALUE)
+  })
+})
+
 describe('pagination (AC-8)', () => {
   it('compte au moins une page', () => {
     expect(pageCount(0, 20)).toBe(1)

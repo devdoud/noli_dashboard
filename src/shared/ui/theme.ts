@@ -102,6 +102,9 @@ export const theme = createTheme({
  * Variables par mode : fond de page, texte secondaire, bordure de champ (3:1),
  * et en mode clair un ambre foncé pour tout texte, lien ou focus (l'ambre 6 échoue sur blanc).
  */
+/** Vert foncé des badges « Prête » en mode clair : le vert 9 de Mantine reste sous 4,5:1 (spec 0006). */
+export const LIGHT_GREEN_TEXT = '#22702F'
+
 export const cssVariablesResolver: CSSVariablesResolver = () => ({
   variables: {},
   light: {
@@ -115,6 +118,8 @@ export const cssVariablesResolver: CSSVariablesResolver = () => ({
     '--mantine-color-noliAmber-text': noliAmber[9],
     '--mantine-color-noliRed-light-color': noliRed[9],
     '--mantine-color-noliRed-text': noliRed[9],
+    '--mantine-color-green-light-color': LIGHT_GREEN_TEXT,
+    '--mantine-color-green-text': LIGHT_GREEN_TEXT,
     '--mantine-color-error': noliRed[8],
     '--noli-color-surface': '#FFFFFF',
     '--noli-color-surface-raised': '#F0F1F5',

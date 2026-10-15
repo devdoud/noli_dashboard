@@ -54,6 +54,8 @@ export function useUnsavedChangesGuard(
       }}
       title="Quitter sans enregistrer ?"
       centered
+      // Au dessus d'une fenêtre déjà ouverte (épisode, 200 par défaut), sous les notifications (400).
+      zIndex={300}
     >
       <Text size="sm">{message}</Text>
       <Group justify="flex-end" mt="lg">

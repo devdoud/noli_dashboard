@@ -1,4 +1,9 @@
-import { seriesPageSchema, seriesSummarySchema } from '@/features/series/schemas'
+import {
+  adminSeriesSchema,
+  seriesPageSchema,
+  seriesSummarySchema,
+  videoUploadLinkSchema,
+} from '@/features/series/schemas'
 
 const minimal = { _id: 's1', title: 'Série 1' }
 
@@ -86,5 +91,43 @@ describe('seriesPageSchema (AC-8, AC-9)', () => {
     ['sans liste de séries', { data: { total: 0, page: 1, limit: 20 } }],
   ])('refuse une réponse %s', (_label, raw) => {
     expect(seriesPageSchema.safeParse(raw).success).toBe(false)
+  })
+})
+
+describe('épisodes de la fiche admin (spec 0006)', () => {
+  const series = { _id: 's1', title: 'Série', categories: [] }
+
+  it('garde les épisodes avec leur vidéo et complète les champs absents', () => {
+    const parsed = adminSeriesSchema.parse({
+      ...series,
+      episodes: [
+        {
+          seasonNumber: 1,
+          episodeNumber: 2,
+          title: 'Deux',
+          duration: 1470,
+          isFree: null,
+          video: { status: 'legacy', pendingStatus: null },
+        },
+      ],
+    })
+
+    expect(parsed.episodes[0]).toMatchObject({ isFree: false, video: { hasPastedUrl: false } })
+  })
+
+  it('renvoie une liste vide sans épisodes', () => {
+    expect(adminSeriesSchema.parse({ ...series, episodes: null }).episodes).toEqual([])
+    expect(adminSeriesSchema.parse(series).episodes).toEqual([])
+  })
+
+  it('refuse un lien d’envoi d’une méthode inconnue', () => {
+    const link = {
+      uploadUrl: 'https://upload.cloudflarestream.com/x',
+      uid: 'x',
+      expiresAt: '2026-10-15T18:00:00.000Z',
+    }
+
+    expect(videoUploadLinkSchema.safeParse({ ...link, method: 'tus' }).success).toBe(true)
+    expect(videoUploadLinkSchema.safeParse({ ...link, method: 'ftp' }).success).toBe(false)
   })
 })

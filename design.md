@@ -83,6 +83,7 @@ Mesurés le 2026-10-13 dans Chromium, sur `/dev/composants` (puis `/` pour le me
 | Bouton danger (texte blanc sur rouge 8) | 5,92:1 | 5,92:1 |
 | Lien, lien de tableau | 5,94:1 | 9,06:1 |
 | Badge Premium | 5,00:1 | 11,93:1 |
+| Badge Prête (vert foncé `#22702F` en clair) | 5,34:1 | 10,27:1 |
 | Résumé de pagination | 6,38:1 | 7,41:1 |
 | Titre de l'alerte d'erreur, bouton Réessayer | 6,21:1 | 13,43:1 |
 | Message de l'alerte | 14,51:1 | 15,15:1 |
