@@ -17,7 +17,7 @@ _Étapes tirées des critères de la spec 0008. `/check verify` les exécute ; `
 - [x] 11. Fenêtre modifiée + Échap → « Abandonner les changements ? » ; ordre en cours + clic sur « Séries » → « Quitter sans enregistrer ? » → AC-11
 - [x] 12. Au clavier seul : déplacer une catégorie (le focus reste sur le bouton), enregistrer l'ordre, ouvrir et fermer la fenêtre ; lecteur d'écran : noms « Monter « … » », « Visible : … », annonce de position → AC-12
 - [x] 13. Largeur de 390 px : le tableau défile dans son cadre, la page n'a pas de défilement horizontal → AC-13
-- [ ] 14. Production, lecture seule : la page liste les catégories masquées comprises, avec leurs miniatures → AC-14
+- [x] 14. Production, lecture seule : la page liste les catégories masquées comprises, avec leurs miniatures → AC-14
 
 ## Value sourcing
 - [x] 15. La forme du nom suit la règle du backend : « Ça va » → `/ca-va`, « Œuvre » → `/uvre` (aperçu de création) → AC-2, AC-3

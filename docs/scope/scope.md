@@ -133,13 +133,13 @@ Spec [0007](../specs/0007-images/index.md) · Code `src/features/series/images/`
 Gérer toutes les catégories, masquées comprises : créer, modifier, masquer, réordonner, supprimer, et leur image carrée.
 **Done when:** un admin crée, renomme, masque et réordonne les catégories et en change l'image ; supprimer une catégorie encore utilisée affiche pourquoi c'est refusé ; un nom trop proche d'un existant est refusé clairement.
 - [x] Design it (spec): `/architect catégories`
-- [ ] Build it: `/develop catégories`
+- [x] Build it: `/develop catégories`
    - [x] Briques partagées : emplacement d'image, protection de la page, liste des catégories et clés de cache dans `src/shared/`, sans changement pour les séries (AC-9 à AC-11)
    - [x] Règles et page : `slugify` et contrôles du nom et de l'adresse, page `/categories` et menu, création de bout en bout (AC-1 à AC-3, AC-10)
    - [x] Modification, adresse, visibilité avec confirmation, ordre enregistré en un envoi, suppression avec « Masquer plutôt » (AC-4 à AC-8)
    - [x] Image de catégorie, protections, accessibilité, écran étroit (AC-9, AC-11 à AC-13)
-   - [ ] Base locale séparée de la production, essais réels, mise en ligne et contrôle en production en lecture seule (AC-14)
-- [ ] Verify it: `/check verify catégories`
+   - [x] Base locale séparée de la production, essais réels, mise en ligne et contrôle en production en lecture seule (AC-14)
+- [x] Verify it: `/check verify catégories`
 - [x] Test it: `/test catégories`
 Spec [0008](../specs/0008-categories/index.md) · Code `src/features/categories/`
 
