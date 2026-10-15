@@ -124,7 +124,7 @@ Envoyer et retirer la couverture, la bannière et la vignette d'épisode, avec a
    - [x] Dépôt de fichier, liens externes, refus du backend, protections, accessibilité, écran étroit (AC-2, AC-7 à AC-11)
    - [x] Mise en ligne du dashboard et contrôle en production en lecture seule (AC-12)
 - [x] Verify it: `/check verify images`
-- [ ] Test it: `/test images`
+- [x] Test it: `/test images`
 Spec [0007](../specs/0007-images/index.md) · Code `src/features/series/images/`
 
 ## Slice 5: Catégories
