@@ -9,7 +9,7 @@ import { backToListPath, seriesPath } from '@/features/series/navigation'
 import { SeriesForm } from '@/features/series/SeriesForm'
 import { EMPTY_SERIES_FORM, type SeriesFormValues } from '@/features/series/seriesFormSchema'
 import { toCreatePayload } from '@/features/series/seriesPayload'
-import { useUnsavedChangesGuard } from '@/features/series/useUnsavedChangesGuard'
+import { useUnsavedChangesGuard } from '@/shared/ui/useUnsavedChangesGuard'
 import { notifySuccess } from '@/shared/ui/notifySuccess'
 import { PageHeader } from '@/shared/ui/PageHeader'
 

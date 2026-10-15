@@ -1,6 +1,7 @@
 // Réponse de GET /series (spec 0004, « Schéma de réponse »). Schéma tolérant : un champ
 // d'affichage absent ou null ne fait pas échouer toute la page.
 import { z } from 'zod'
+import type { Category } from '@/shared/api/categories'
 
 const count = z
   .number()
@@ -110,21 +111,9 @@ export const adminSeriesResponseSchema = z.object({ series: adminSeriesSchema })
 
 export const deleteSeriesResponseSchema = z.object({ message: z.string().optional() })
 
-export const allCategoriesSchema = z.object({
-  categories: z.array(
-    z.object({
-      _id: z.string(),
-      name: z.string(),
-      isVisible: z
-        .boolean()
-        .nullish()
-        .transform((value) => value ?? true),
-    }),
-  ),
-})
-
 export type AdminSeries = z.infer<typeof adminSeriesSchema>
-export type CategoryOption = z.infer<typeof allCategoriesSchema>['categories'][number]
+/** Une catégorie telle que le formulaire de série la propose (sous ensemble de la liste partagée). */
+export type CategoryOption = Pick<Category, '_id' | 'name' | 'isVisible'>
 
 // Routes vidéo d'un épisode (spec 0006) : le champ message est retiré par Zod.
 export const videoUploadLinkSchema = z.object({

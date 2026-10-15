@@ -49,8 +49,8 @@ function seriesCountOf(body: unknown): number | undefined {
 function categoryInUseMessage(error: ApiError): string {
   const count = seriesCountOf(error.body)
   return count === undefined
-    ? "Cette catégorie est encore utilisée par des séries. Retirez la de ces séries d'abord."
-    : `Cette catégorie est encore utilisée par ${String(count)} série(s). Retirez la de ces séries d'abord.`
+    ? "Cette catégorie est encore utilisée par des séries. Retirez-la de ces séries d'abord."
+    : `Cette catégorie est encore utilisée par ${String(count)} série(s). Retirez-la de ces séries d'abord.`
 }
 
 function httpMessage(error: ApiError): string {

@@ -2,8 +2,8 @@
 import { Paper, SimpleGrid, Stack, Text, Title } from '@mantine/core'
 import { useCallback, useEffect, useState } from 'react'
 import { useImageMutations } from '@/features/series/api'
-import { IMAGE_SLOTS } from '@/features/series/images/imageRules'
-import { ImageSlot } from '@/features/series/images/ImageSlot'
+import { IMAGE_SLOTS } from '@/shared/images/imageRules'
+import { ImageSlot } from '@/shared/images/ImageSlot'
 import type { AdminSeries } from '@/features/series/schemas'
 
 const COVER_MAX_WIDTH = 240

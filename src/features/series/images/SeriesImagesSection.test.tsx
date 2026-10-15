@@ -3,8 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { notifications } from '@mantine/notifications'
 import { http } from 'msw'
 import { routes } from '@/app/routes'
-import { readImageDimensions } from '@/features/series/images/imageDimensions'
-import { IMAGE_MESSAGES } from '@/features/series/images/imageRules'
+import { readImageDimensions } from '@/shared/images/imageDimensions'
+import { IMAGE_MESSAGES } from '@/shared/images/imageRules'
 import { resetSessionForTests } from '@/shared/session/session'
 import {
   apiError,
@@ -21,7 +21,7 @@ import { server } from '@/test/server'
 import { signInForTests } from '@/test/session'
 
 // jsdom ne décode pas les images : les dimensions lues sont choisies par chaque test.
-vi.mock('@/features/series/images/imageDimensions', () => ({
+vi.mock('@/shared/images/imageDimensions', () => ({
   readImageDimensions: vi.fn(),
 }))
 
@@ -481,7 +481,8 @@ describe('cas limites (AC-2, AC-4, AC-5, AC-6, AC-8)', { timeout: 45_000 }, () =
       .getByRole('button', { name: "Modifier l'épisode 1 de la saison 1" })
       .closest('tr')
     const mini = row?.querySelector('img[alt=""]')
-    expect(mini).toHaveAttribute('loading', 'lazy')
+    // Pas de chargement différé : dans un tableau qui défile, l'image ne se chargerait pas.
+    expect(mini).not.toHaveAttribute('loading')
 
     fireEvent.error(mini as Element)
 

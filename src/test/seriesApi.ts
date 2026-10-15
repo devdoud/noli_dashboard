@@ -2,7 +2,10 @@ import { http, HttpResponse } from 'msw'
 
 // Réponses simulées de GET /series pour les tests (spec 0004).
 
-export const API = 'http://api.test'
+import { API } from '@/test/apiBase'
+
+export { API } from '@/test/apiBase'
+export { ALL_CATEGORIES, categoriesHandler } from '@/test/categoriesApi'
 
 export interface RawSeries {
   readonly _id: string
@@ -61,12 +64,6 @@ export function seriesHandler(
 
 export const SERIES_ID = '6ac0e7848db827737b2141dc'
 
-export const ALL_CATEGORIES = [
-  { _id: 'c1', name: 'Drame', slug: 'drame', isVisible: true },
-  { _id: 'c2', name: 'Thriller', slug: 'thriller', isVisible: true },
-  { _id: 'c9', name: 'Bientôt', slug: 'bientot', isVisible: false },
-]
-
 export function makeAdminSeries(overrides: Partial<RawSeries> = {}): RawSeries {
   return {
     ...makeSeries(1),
@@ -88,12 +85,6 @@ export function makeAdminSeries(overrides: Partial<RawSeries> = {}): RawSeries {
     episodes: [{ seasonNumber: 1, episodeNumber: 1, title: 'Épisode 1' }],
     ...overrides,
   }
-}
-
-export function categoriesHandler() {
-  return http.get(`${API}/categories/all`, () =>
-    HttpResponse.json({ message: 'ok', categories: ALL_CATEGORIES }),
-  )
 }
 
 export function adminSeriesHandler(series: RawSeries = makeAdminSeries()) {

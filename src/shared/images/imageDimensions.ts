@@ -1,5 +1,5 @@
 // Dimensions d'une image choisie (spec 0007, AC-3), lues par le navigateur sur son adresse blob:.
-import type { ImageDimensions } from '@/features/series/images/imageRules'
+import type { ImageDimensions } from '@/shared/images/imageRules'
 
 /**
  * Décode l'image dans un élément `img` : `naturalWidth` et `naturalHeight` tiennent compte de la

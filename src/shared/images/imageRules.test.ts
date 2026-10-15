@@ -7,7 +7,7 @@ import {
   imageErrorMessage,
   isHostedImage,
   MAX_IMAGE_BYTES,
-} from '@/features/series/images/imageRules'
+} from '@/shared/images/imageRules'
 import { ApiError } from '@/shared/api/errors'
 
 function fileOf(name: string, type: string, size = 1024): File {
@@ -127,7 +127,7 @@ describe('imageErrorMessage (AC-8)', () => {
     [http(429), IMAGE_MESSAGES.limit],
     [http(503), IMAGE_MESSAGES.unavailable],
     [http(409), IMAGE_MESSAGES.conflict],
-    [http(404), IMAGE_MESSAGES.seriesGone],
+    [http(404), "Cette série n'existe plus."],
     [new ApiError({ kind: 'network' }), IMAGE_MESSAGES.network],
     [new ApiError({ kind: 'timeout' }), IMAGE_MESSAGES.network],
   ])('%s', (error, expected) => {
@@ -135,7 +135,7 @@ describe('imageErrorMessage (AC-8)', () => {
   })
 
   it('vise l’épisode sur un 404 de la vignette', () => {
-    expect(imageErrorMessage(http(404), IMAGE_SLOTS.thumbnail)).toBe(IMAGE_MESSAGES.episodeGone)
+    expect(imageErrorMessage(http(404), IMAGE_SLOTS.thumbnail)).toBe("Cet épisode n'existe plus.")
   })
 
   it('montre un message connu du backend, chaîne ou tableau', () => {
@@ -154,5 +154,18 @@ describe('imageErrorMessage (AC-8)', () => {
 
   it('reste silencieux en fin de session', () => {
     expect(imageErrorMessage(new ApiError({ kind: 'session-ended' }), cover)).toBeUndefined()
+  })
+})
+
+describe('emplacement de catégorie (spec 0008, AC-9)', () => {
+  it('est carré, 400 × 400 au moins, et vise la catégorie sur un 404', () => {
+    const category = IMAGE_SLOTS.category
+    expect(category).toMatchObject({ aspectRatio: 1, minWidth: 400, minHeight: 400 })
+    expect(checkDimensions({ width: 399, height: 600 }, category)).toBe(
+      'Image trop petite : 400 × 400 px au moins (reçue : 399 × 600).',
+    )
+    expect(imageErrorMessage(new ApiError({ kind: 'http', status: 404 }), category)).toBe(
+      "Cette catégorie n'existe plus.",
+    )
   })
 })

@@ -186,7 +186,11 @@ describe('AppLayout (AC-5, AC-6, AC-7)', () => {
 
     const nav = await screen.findByRole('navigation', { name: 'Menu principal' })
     const links = nav.querySelectorAll('a')
-    expect([...links].map((link) => link.textContent)).toEqual(["Vue d'ensemble", 'Séries'])
+    expect([...links].map((link) => link.textContent)).toEqual([
+      "Vue d'ensemble",
+      'Séries',
+      'Catégories',
+    ])
     expect(screen.getByRole('link', { name: "Vue d'ensemble" })).toHaveAttribute(
       'aria-current',
       'page',
@@ -374,18 +378,17 @@ describe('menu (AC-6)', () => {
       'Catégories',
       'Outils',
     ])
-    expect(visibleNavItems().map((item) => item.to)).toEqual(['/', '/series'])
+    expect(visibleNavItems().map((item) => item.to)).toEqual(['/', '/series', '/categories'])
   })
 
   it('montre une entrée dès qu’elle passe à ready', () => {
-    const items = navItems.map((item) =>
-      item.to === '/categories' ? { ...item, ready: true } : item,
-    )
+    const items = navItems.map((item) => (item.to === '/outils' ? { ...item, ready: true } : item))
 
     expect(visibleNavItems(items).map((item) => item.label)).toEqual([
       "Vue d'ensemble",
       'Séries',
       'Catégories',
+      'Outils',
     ])
   })
 })
