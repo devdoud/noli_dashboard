@@ -378,3 +378,113 @@ describe('protection et vignette (AC-6, AC-9)', { timeout: 45_000 }, () => {
     })
   })
 })
+
+describe('cas limites (AC-2, AC-4, AC-5, AC-6, AC-8)', { timeout: 45_000 }, () => {
+  function dropZone(group: HTMLElement): HTMLElement {
+    const zone = group.querySelector<HTMLElement>('div[style*="border"]')
+    if (zone === null) throw new Error('Zone de dépôt introuvable')
+    return zone
+  }
+
+  it('montre l’aperçu d’un fichier déposé (AC-2)', async () => {
+    await openDetail()
+
+    fireEvent.drop(dropZone(slot('Couverture')), { dataTransfer: { files: [png()] } })
+
+    expect(
+      await within(slot('Couverture')).findByRole('button', { name: 'Envoyer la couverture' }),
+    ).toBeInTheDocument()
+  })
+
+  it('refuse le dépôt de plusieurs fichiers (AC-2)', async () => {
+    const { backend } = await openDetail()
+
+    fireEvent.drop(dropZone(slot('Bannière')), { dataTransfer: { files: [png(), png('b.png')] } })
+
+    expect(await within(slot('Bannière')).findByText(IMAGE_MESSAGES.oneFile)).toBeInTheDocument()
+    expect(dimensions).not.toHaveBeenCalled()
+    expect(backend.calls).toEqual([])
+  })
+
+  it('ignore le résultat d’un premier choix dépassé par un second (AC-3)', async () => {
+    const user = userEvent.setup()
+    await openDetail()
+    const late: { resolve?: (value: { width: number; height: number }) => void } = {}
+    dimensions
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            late.resolve = resolve
+          }),
+      )
+      .mockResolvedValueOnce({ width: 800, height: 1200 })
+
+    await user.upload(fileInput(slot('Couverture')), png('premier.png'))
+    await user.upload(fileInput(slot('Couverture')), png('second.png'))
+    await within(slot('Couverture')).findByRole('button', { name: 'Envoyer la couverture' })
+    act(() => {
+      late.resolve?.({ width: 100, height: 100 })
+    })
+
+    await waitFor(() => {
+      expect(within(slot('Couverture')).queryByRole('alert')).not.toBeInTheDocument()
+    })
+    expect(
+      within(slot('Couverture')).getByRole('button', { name: 'Envoyer la couverture' }),
+    ).toBeInTheDocument()
+  })
+
+  it('garde l’aperçu quand la fiche est relue avec une autre image (AC-4)', async () => {
+    const user = userEvent.setup()
+    const { queryClient } = await openDetail()
+    await user.upload(fileInput(slot('Couverture')), png())
+    await within(slot('Couverture')).findByRole('button', { name: 'Envoyer la couverture' })
+
+    act(() => {
+      queryClient.setQueryData(
+        ['series', 'detail', '6ac0e7848db827737b2141dc'],
+        (series: Record<string, unknown> | undefined) =>
+          series === undefined ? series : { ...series, coverImage: HOSTED_IMAGE },
+      )
+    })
+
+    expect(
+      within(slot('Couverture')).getByRole('button', { name: 'Envoyer la couverture' }),
+    ).toBeInTheDocument()
+    expect(within(slot('Couverture')).getByRole('img', { name: /^Aperçu/ })).toBeInTheDocument()
+  })
+
+  it('affiche sous l’emplacement un refus du retrait et garde l’image (AC-5, AC-8)', async () => {
+    const user = userEvent.setup()
+    await openDetail({ bannerImage: HOSTED_IMAGE })
+    server.use(
+      http.delete(`${API}/series/:id/banner`, () => apiError(503, 'Service d’images indisponible')),
+    )
+
+    await user.click(within(slot('Bannière')).getByRole('button', { name: 'Retirer la bannière' }))
+    await user.click(
+      within(await screen.findByRole('dialog', { name: 'Retirer la bannière ?' })).getByRole(
+        'button',
+        { name: 'Retirer' },
+      ),
+    )
+
+    expect(
+      await within(slot('Bannière')).findByText(IMAGE_MESSAGES.unavailable),
+    ).toBeInTheDocument()
+    expect(within(slot('Bannière')).getByRole('img')).toHaveAttribute('src', HOSTED_IMAGE)
+  })
+
+  it('cache la petite vignette du tableau si elle ne charge pas (AC-6)', async () => {
+    await openDetail({}, [makeEpisode(1, 1, { thumbnail: 'https://mort.test/v.jpg' })])
+    const row = screen
+      .getByRole('button', { name: "Modifier l'épisode 1 de la saison 1" })
+      .closest('tr')
+    const mini = row?.querySelector('img[alt=""]')
+    expect(mini).toHaveAttribute('loading', 'lazy')
+
+    fireEvent.error(mini as Element)
+
+    expect(row?.querySelector('img[alt=""]')).toBeNull()
+  })
+})
