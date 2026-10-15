@@ -18,7 +18,7 @@ _Étapes tirées des critères de la spec 0007. `/check verify` les exécute ; `
 - [x] Aperçu en attente, clic sur « Vue d'ensemble » → « Quitter sans enregistrer ? » ; vignette en attente, Échap dans la fenêtre → « Abandonner les changements ? » → AC-9
 - [x] Au clavier seul : choisir, envoyer, annuler et retirer chaque image ; les groupes s'annoncent « Couverture », « Bannière », « Vignette » ; l'erreur est lue avec le groupe → AC-10
 - [x] Largeur de 390 px → les emplacements s'empilent, aucun défilement horizontal → AC-11
-- [ ] Production, lecture seule : la fiche d'une série existante montre ses images dans la section et ses vignettes dans le tableau, sans rien enregistrer → AC-12
+- [x] Production, lecture seule : la fiche d'une série existante montre ses images dans la section et ses vignettes dans le tableau, sans rien enregistrer → AC-12
 
 ## Value sourcing
 - [x] Une couverture déjà en place s'affiche depuis `series.coverImage`, une bannière depuis `series.bannerImage`, une vignette depuis `episode.thumbnail` (vérifier sur une série qui en a) → AC-1, AC-6

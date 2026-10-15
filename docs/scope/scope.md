@@ -117,13 +117,13 @@ Spec [0006](../specs/0006-episodes/index.md) · Code `src/features/series/episod
 Envoyer et retirer la couverture, la bannière et la vignette d'épisode, avec aperçu et contrôle du format avant l'envoi.
 **Done when:** un admin envoie puis retire chaque image ; le format (JPEG, PNG, WebP), la taille (5 Mo) et les dimensions minimales sont vérifiés avant l'envoi ; la limite de 10 envois en 10 minutes s'affiche clairement.
 - [x] Design it (spec): `/architect images`
-- [ ] Build it: `/develop images`
+- [x] Build it: `/develop images`
    - [x] Règles et API : schéma de la vignette, routes et hooks de mutation, table des emplacements, contrôles du fichier, messages d'erreur (AC-3, AC-4, AC-8)
    - [x] Couverture de bout en bout : section « Images », choix, aperçu, envoi, retrait avec confirmation, essai réel en local (AC-1 à AC-5)
    - [x] Bannière, vignette dans la fenêtre d'épisode et dans le tableau (AC-1, AC-6)
    - [x] Dépôt de fichier, liens externes, refus du backend, protections, accessibilité, écran étroit (AC-2, AC-7 à AC-11)
-   - [ ] Mise en ligne du dashboard et contrôle en production en lecture seule (AC-12)
-- [ ] Verify it: `/check verify images`
+   - [x] Mise en ligne du dashboard et contrôle en production en lecture seule (AC-12)
+- [x] Verify it: `/check verify images`
 - [ ] Test it: `/test images`
 Spec [0007](../specs/0007-images/index.md) · Code `src/features/series/images/`
 
