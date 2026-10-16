@@ -20,7 +20,7 @@ _Ce sont des recommandations pour garder une construction ordonnée, pas des obl
 | 7 | Épisodes | Slice 3 | done |
 | 8 | Images | Slice 4 | done |
 | 9 | Catégories | Slice 5 | done |
-| 10 | Recherche et filtres | Slice 6 | in-progress |
+| 10 | Recherche et filtres | Slice 6 | done |
 | 11 | Vue d'ensemble | Slice 7 | planned |
 | 12 | Notification de test | Slice 8 | planned |
 
@@ -145,18 +145,18 @@ Spec [0008](../specs/0008-categories/index.md) · Code `src/features/categories/
 
 ## Slice 6: Recherche et filtres
 
-### 10. Recherche et filtres · in-progress
+### 10. Recherche et filtres · done
 Retrouver vite une série dans la liste, par titre, catégorie ou accès premium.
 **Done when:** un admin filtre la liste par titre, catégorie et premium ; l'adresse de la page garde les filtres ; les cas « aucun résultat » et erreur s'affichent.
 - [x] Design it (spec): `/architect recherche et filtres`
-- [ ] Build it: `/develop recherche et filtres`
+- [x] Build it: `/develop recherche et filtres`
    - [x] Prérequis backend : route admin `GET /series/admin` (filtres, recherche sans accents et échappée, catégories masquées, tri stable), tests, essai sur l'API locale `noli_dev` (AC-11)
    - [x] Recherche par titre de bout en bout : `filters.ts`, liste sur la nouvelle route, saisie avec attente, adresse et historique (AC-2 à AC-4)
    - [x] Filtres catégorie et accès, compte, « Effacer les filtres », aucun résultat, catégories masquées dans les lignes (AC-1, AC-6, AC-7, AC-9)
    - [x] Adresse invalide, erreurs, accessibilité, écran étroit (AC-5, AC-8, AC-10)
-   - [ ] Mise en ligne de l'API puis du dashboard, contrôle en production en lecture seule (AC-11, AC-12)
+   - [x] Mise en ligne de l'API puis du dashboard, contrôle en production en lecture seule (AC-11, AC-12)
 - [x] Verify it: `/check verify recherche et filtres`
-- [ ] Test it: `/test recherche et filtres`
+- [x] Test it: `/test recherche et filtres`
 Spec [0009](../specs/0009-recherche-filtres/index.md) · Code `src/features/series/` (filtres), backend `noli-backend/src/series/` (route admin)
 
 ## Slice 7: Vue d'ensemble
