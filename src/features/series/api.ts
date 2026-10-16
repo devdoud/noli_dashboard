@@ -1,6 +1,6 @@
 // Lectures et écritures des séries (specs 0004 à 0007), par le client API partagé.
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { SERIES_PAGE_SIZE } from '@/features/series/page'
+import { toApiQuery, type SeriesFilters } from '@/features/series/filters'
 import {
   adminSeriesResponseSchema,
   deleteSeriesResponseSchema,
@@ -19,25 +19,30 @@ import { seriesListsKey } from '@/shared/api/seriesKeys'
 export const seriesKeys = {
   all: ['series'] as const,
   lists: seriesListsKey,
-  list: (page: number) => [...seriesListsKey, page] as const,
+  list: (page: number, filters: SeriesFilters) => [...seriesListsKey, page, filters] as const,
   detail: (id: string) => ['series', 'detail', id] as const,
 }
 
 const DETAIL_STALE_TIME_MS = 30_000
 
-export function useSeriesPage(page: number) {
+/**
+ * Page filtrée de la liste (spec 0009), par la route admin. `filters` vient de `parseFilters` ou
+ * `makeFilters` (clés dans un ordre fixe). `enabled` attend les catégories quand l'adresse en filtre une.
+ */
+export function useSeriesPage(page: number, filters: SeriesFilters, enabled = true) {
   return useQuery({
-    queryKey: seriesKeys.list(page),
+    queryKey: seriesKeys.list(page, filters),
     queryFn: ({ signal }) =>
       apiRequest({
         method: 'GET',
-        path: '/series',
-        query: { page, limit: SERIES_PAGE_SIZE },
+        path: '/series/admin',
+        query: { ...toApiQuery(filters, page) },
         schema: seriesPageSchema,
         signal,
       }),
-    // Les lignes de la page précédente restent (grisées) pendant le chargement de la suivante.
+    // Les lignes précédentes restent (grisées) pendant le chargement de la page ou du filtre suivant.
     placeholderData: keepPreviousData,
+    enabled,
   })
 }
 

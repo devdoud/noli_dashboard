@@ -1,8 +1,16 @@
-import { Button, Paper, VisuallyHidden } from '@mantine/core'
+import { Button, Group, Paper, Stack, VisuallyHidden } from '@mantine/core'
 import { IconPlus } from '@tabler/icons-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router'
 import { useSeriesPage } from '@/features/series/api'
+import {
+  hasFilters,
+  makeFilters,
+  parseFilters,
+  resultCountText,
+  withFilters,
+  type SeriesFilters,
+} from '@/features/series/filters'
 import { lastPage, parsePage, SERIES_PAGE_SIZE } from '@/features/series/page'
 import type { SeriesSummary } from '@/features/series/schemas'
 import {
@@ -13,10 +21,14 @@ import {
   StatusCell,
   TitleCell,
 } from '@/features/series/SeriesCells'
+import { SeriesFiltersBar, type HistoryMode } from '@/features/series/SeriesFiltersBar'
+import { isApiError } from '@/shared/api/errors'
+import { useAllCategories } from '@/shared/api/categories'
 import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable'
+import { ErrorState } from '@/shared/ui/ErrorState'
 import { PageHeader } from '@/shared/ui/PageHeader'
 
-// Liste paginée des séries (spec 0004, AC-8 à AC-10), page courante dans l'adresse.
+// Liste paginée et filtrée des séries (specs 0004 et 0009). Page et filtres vivent dans l'adresse.
 
 const columns: readonly DataTableColumn<SeriesSummary>[] = [
   {
@@ -47,10 +59,6 @@ const columns: readonly DataTableColumn<SeriesSummary>[] = [
   },
 ]
 
-function pageParams(page: number): Record<string, string> {
-  return page <= 1 ? {} : { page: String(page) }
-}
-
 function getRowKey(series: SeriesSummary): string {
   return series._id
 }
@@ -58,28 +66,64 @@ function getRowKey(series: SeriesSummary): string {
 export function SeriesListPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
+  const searchKey = searchParams.toString()
   const page = parsePage(searchParams.get('page'))
-  const query = useSeriesPage(page)
+  const filters = useMemo(() => parseFilters(new URLSearchParams(searchKey)), [searchKey])
+  const filtered = hasFilters(filters)
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  // Une catégorie dans l'adresse attend la liste des catégories avant la requête (AC-5) : une
+  // catégorie inconnue ne montre jamais un instant « Aucune série ».
+  const categories = useAllCategories()
+  const waitingCategories = filters.categoryId !== undefined && categories.isPending
+  // Adresse invalide (AC-5) : filtres et page invalides retirés, sans entrée d'historique. Une
+  // catégorie absente de la liste est retirée seulement quand cette liste est chargée et à jour.
+  const unknownCategory =
+    filters.categoryId !== undefined &&
+    categories.data !== undefined &&
+    !categories.isFetching &&
+    !categories.data.some((category) => category._id === filters.categoryId)
+  const query = useSeriesPage(page, filters, !waitingCategories && !unknownCategory)
   const { data } = query
   const total = data?.data.total ?? 0
 
   // Sans données encore chargées, TanStack Query efface l'erreur au début d'un nouvel essai.
   // La page garde l'erreur affichée jusqu'à la réponse (spec 0004, « error est prioritaire »).
-  const [retrying, setRetrying] = useState<{ readonly page: number; readonly error: unknown }>()
+  const [retrying, setRetrying] = useState<{ readonly key: string; readonly error: unknown }>()
   const retry = useCallback(() => {
-    setRetrying({ page, error: query.error })
+    setRetrying({ key: searchKey, error: query.error })
     void query.refetch().finally(() => {
       setRetrying(undefined)
     })
-  }, [page, query])
+  }, [searchKey, query])
   const shownError =
     query.error ??
-    (retrying !== undefined && retrying.page === page && query.isFetching
+    (retrying !== undefined && retrying.key === searchKey && query.isFetching
       ? retrying.error
       : undefined)
+  const refused = isApiError(shownError) && shownError.status === 400
 
-  // Page au delà de la fin (adresse ancienne ou modifiée à la main) : on remplace l'adresse
-  // par la dernière page, sans entrée d'historique et sans montrer l'état vide (AC-9).
+  const applyFilters = useCallback(
+    (next: SeriesFilters, mode: HistoryMode) => {
+      setSearchParams(withFilters(makeFilters(next), 1), { replace: mode === 'replace' })
+    },
+    [setSearchParams],
+  )
+  const clearFilters = useCallback(() => {
+    setSearchParams(withFilters({}, 1))
+    searchRef.current?.focus()
+  }, [setSearchParams])
+
+  const canonical = withFilters(
+    unknownCategory ? makeFilters({ ...filters, categoryId: undefined }) : filters,
+    page,
+  ).toString()
+  useEffect(() => {
+    if (canonical !== searchKey) setSearchParams(new URLSearchParams(canonical), { replace: true })
+  }, [canonical, searchKey, setSearchParams])
+
+  // Page au delà de la fin (adresse ancienne ou modifiée à la main, filtre plus étroit) : on
+  // remplace l'adresse par la dernière page, filtres gardés, sans entrée d'historique (AC-6).
   // Ces données vides restent affichées en attente pendant le chargement de la dernière page :
   // elles sont neutralisées aussi, sinon le recadrage de DataTable ajouterait une entrée.
   const emptyBeyondEnd =
@@ -87,22 +131,31 @@ export function SeriesListPage() {
   const mustReplace = emptyBeyondEnd && !query.isPlaceholderData
 
   useEffect(() => {
-    if (mustReplace) setSearchParams(pageParams(lastPage(total)), { replace: true })
-  }, [mustReplace, total, setSearchParams])
+    if (mustReplace) setSearchParams(withFilters(filters, lastPage(total)), { replace: true })
+  }, [mustReplace, total, filters, setSearchParams])
 
   const onPageChange = useCallback(
     (next: number) => {
-      setSearchParams(pageParams(next))
+      setSearchParams(withFilters(filters, next))
       window.scrollTo({ top: 0 })
     },
-    [setSearchParams],
+    [filters, setSearchParams],
   )
 
+  // Annonces faites sur des résultats arrivés, jamais sur ceux de la requête précédente (AC-10).
+  const settled = data !== undefined && !query.isPlaceholderData
   const displayedPage = data?.data.page ?? page
   const announcement =
-    data !== undefined && !query.isPlaceholderData && !emptyBeyondEnd && total > 0
+    settled && !emptyBeyondEnd && total > 0
       ? `Page ${String(displayedPage)} sur ${String(lastPage(total))}`
       : ''
+  const countText = filtered && settled && !emptyBeyondEnd ? resultCountText(total) : ''
+
+  const clearButton = (
+    <Button variant="light" size="xs" onClick={clearFilters}>
+      Effacer les filtres
+    </Button>
+  )
 
   return (
     <>
@@ -120,26 +173,46 @@ export function SeriesListPage() {
           </Button>
         }
       />
+      <SeriesFiltersBar
+        filters={filters}
+        onChange={applyFilters}
+        onClear={clearFilters}
+        categories={categories.data}
+        categoriesStatus={categories.status}
+        countText={countText}
+        searchRef={searchRef}
+      />
       <VisuallyHidden aria-live="polite">{announcement}</VisuallyHidden>
       <Paper withBorder p="md">
-        <DataTable
-          caption="Liste des séries"
-          columns={columns}
-          rows={emptyBeyondEnd ? undefined : data?.data.series}
-          getRowKey={getRowKey}
-          // Pendant le recadrage, la page s'en charge : le total nul évite celui de DataTable.
-          total={emptyBeyondEnd ? 0 : total}
-          page={displayedPage}
-          pageSize={SERIES_PAGE_SIZE}
-          onPageChange={onPageChange}
-          isLoading={query.isFetching || emptyBeyondEnd}
-          error={shownError ?? undefined}
-          onRetry={retry}
-          empty={{
-            title: 'Aucune série pour le moment',
-            description: "Les séries créées dans le dashboard ou par l'API apparaîtront ici.",
-          }}
-        />
+        {shownError === undefined || shownError === null ? (
+          <DataTable
+            caption="Liste des séries"
+            columns={columns}
+            rows={emptyBeyondEnd ? undefined : data?.data.series}
+            getRowKey={getRowKey}
+            // Pendant le recadrage, la page s'en charge : le total nul évite celui de DataTable.
+            total={emptyBeyondEnd ? 0 : total}
+            page={displayedPage}
+            pageSize={SERIES_PAGE_SIZE}
+            onPageChange={onPageChange}
+            isLoading={query.isFetching || emptyBeyondEnd || waitingCategories || unknownCategory}
+            empty={
+              filtered
+                ? { title: 'Aucune série ne correspond à ces filtres.', action: clearButton }
+                : {
+                    title: 'Aucune série pour le moment',
+                    description:
+                      "Les séries créées dans le dashboard ou par l'API apparaîtront ici.",
+                  }
+            }
+          />
+        ) : (
+          <Stack gap="sm">
+            {/* Un filtre refusé (400) redonnerait la même erreur : pas de « Réessayer » (AC-8). */}
+            <ErrorState error={shownError} onRetry={refused ? undefined : retry} />
+            {filtered || refused ? <Group>{clearButton}</Group> : null}
+          </Stack>
+        )}
       </Paper>
     </>
   )

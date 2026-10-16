@@ -1,8 +1,8 @@
 import { http, HttpResponse } from 'msw'
-
-// Réponses simulées de GET /series pour les tests (spec 0004).
-
 import { API } from '@/test/apiBase'
+import { categoriesHandler } from '@/test/categoriesApi'
+
+// Réponses simulées de GET /series/admin pour les tests (specs 0004 et 0009).
 
 export { API } from '@/test/apiBase'
 export { ALL_CATEGORIES, categoriesHandler } from '@/test/categoriesApi'
@@ -33,9 +33,22 @@ export function makeSeries(index: number, overrides: Partial<RawSeries> = {}): R
 export interface SeriesRequest {
   readonly page: string | null
   readonly limit: string | null
+  readonly q: string | null
+  readonly categoryId: string | null
+  readonly premium: string | null
 }
 
-/** Catalogue de `total` séries, découpé comme le backend (une page au delà de la fin est vide). */
+const fold = (text: string) => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+
+function hasCategory(series: RawSeries, id: string): boolean {
+  const categories = series.categories
+  return Array.isArray(categories) && categories.some((c) => (c as { _id?: unknown })._id === id)
+}
+
+/**
+ * Catalogue de `total` séries, filtré et découpé comme la route admin (spec 0009) : titre
+ * contient, sans accents ni majuscules ; catégorie ; accès. Une page au delà de la fin est vide.
+ */
 export function seriesHandler(
   total: number,
   options: {
@@ -43,21 +56,44 @@ export function seriesHandler(
     readonly items?: (index: number) => RawSeries
   } = {},
 ) {
-  return http.get(`${API}/series`, ({ request }) => {
+  return http.get(`${API}/series/admin`, ({ request }) => {
     const url = new URL(request.url)
+    const params = url.searchParams
     options.requests?.push({
-      page: url.searchParams.get('page'),
-      limit: url.searchParams.get('limit'),
+      page: params.get('page'),
+      limit: params.get('limit'),
+      q: params.get('q'),
+      categoryId: params.get('categoryId'),
+      premium: params.get('premium'),
     })
-    const page = Number(url.searchParams.get('page') ?? '1')
-    const limit = Number(url.searchParams.get('limit') ?? '20')
-    const start = (page - 1) * limit
-    const count = Math.max(0, Math.min(limit, total - start))
-    const series = Array.from({ length: count }, (_, offset) =>
-      (options.items ?? makeSeries)(start + offset + 1),
+    const page = Number(params.get('page') ?? '1')
+    const limit = Number(params.get('limit') ?? '20')
+    const q = params.get('q')
+    const categoryId = params.get('categoryId')
+    const premium = params.get('premium')
+    const matching = Array.from({ length: total }, (_, offset) =>
+      (options.items ?? makeSeries)(offset + 1),
+    ).filter(
+      (series) =>
+        (q === null || fold(series.title).includes(fold(q))) &&
+        (categoryId === null || hasCategory(series, categoryId)) &&
+        (premium === null || (series.isPremium === true) === (premium === 'true')),
     )
-    return HttpResponse.json({ message: 'ok', data: { total, page, limit, series } })
+    const start = (page - 1) * limit
+    const series = matching.slice(start, start + limit)
+    return HttpResponse.json({
+      message: 'ok',
+      data: { total: matching.length, page, limit, series },
+    })
   })
+}
+
+/** La page de la liste lit aussi les catégories (filtre « Catégorie », spec 0009). */
+export function seriesListHandlers(
+  total: number,
+  options: Parameters<typeof seriesHandler>[1] = {},
+) {
+  return [seriesHandler(total, options), categoriesHandler()] as const
 }
 
 // Fiche admin d'une série et catégories (spec 0005).

@@ -2,7 +2,7 @@ import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { routes } from '@/app/routes'
-import { API, seriesHandler } from '@/test/seriesApi'
+import { API, categoriesHandler, seriesListHandlers } from '@/test/seriesApi'
 import { SESSION_EXPIRED_MESSAGE, SESSION_FORBIDDEN_MESSAGE } from '@/shared/api/messages'
 import { resetSessionForTests } from '@/shared/session/session'
 import { getSessionState, setSessionState } from '@/shared/session/store'
@@ -84,7 +84,7 @@ describe('validation (AC-2)', { timeout: 15_000 }, () => {
 
   it('envoie l’email sans les espaces autour', async () => {
     const calls: LoginBody[] = []
-    server.use(loginHandler('admin', calls), seriesHandler(0))
+    server.use(loginHandler('admin', calls), ...seriesListHandlers(0))
     renderRoutes(routes, '/connexion')
     await screen.findByLabelText('Email')
 
@@ -98,7 +98,7 @@ describe('validation (AC-2)', { timeout: 15_000 }, () => {
 
 describe('connexion et redirection (AC-3, AC-7)', { timeout: 15_000 }, () => {
   it('mène sur /series sans retour', async () => {
-    server.use(loginHandler(), seriesHandler(0))
+    server.use(loginHandler(), ...seriesListHandlers(0))
     const { router } = renderRoutes(routes, '/connexion')
     await screen.findByLabelText('Email')
 
@@ -110,7 +110,7 @@ describe('connexion et redirection (AC-3, AC-7)', { timeout: 15_000 }, () => {
   })
 
   it('mène sur l’adresse de retour quand elle est sûre', async () => {
-    server.use(loginHandler(), seriesHandler(45))
+    server.use(loginHandler(), ...seriesListHandlers(45))
     const { router } = renderRoutes(
       routes,
       `/connexion?retour=${encodeURIComponent('/series?page=2')}`,
@@ -125,7 +125,7 @@ describe('connexion et redirection (AC-3, AC-7)', { timeout: 15_000 }, () => {
   })
 
   it('ignore une adresse de retour vers un autre site', async () => {
-    server.use(loginHandler(), seriesHandler(0))
+    server.use(loginHandler(), ...seriesListHandlers(0))
     const { router } = renderRoutes(routes, `/connexion?retour=${encodeURIComponent('//evil.com')}`)
     await screen.findByLabelText('Email')
 
@@ -138,7 +138,7 @@ describe('connexion et redirection (AC-3, AC-7)', { timeout: 15_000 }, () => {
 
   it('redirige un admin déjà connecté (AC-7)', async () => {
     signInForTests()
-    server.use(seriesHandler(0))
+    server.use(...seriesListHandlers(0))
     const { router } = renderRoutes(routes, '/connexion')
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Séries' })).toBeInTheDocument()
@@ -262,7 +262,7 @@ describe('garde et fin de session (AC-5, AC-6)', { timeout: 15_000 }, () => {
 
   it('après « Se déconnecter », montre la connexion sans message ni retour', async () => {
     signInForTests()
-    server.use(seriesHandler(45))
+    server.use(...seriesListHandlers(45))
     const { router } = renderRoutes(routes, '/series?page=2')
     await screen.findByRole('heading', { level: 1, name: 'Séries' })
 
@@ -278,7 +278,8 @@ describe('garde et fin de session (AC-5, AC-6)', { timeout: 15_000 }, () => {
   it('redirige vers la connexion quand la session finit pendant le chargement de la liste', async () => {
     signInForTests()
     server.use(
-      http.get(`${API}/series`, () => new HttpResponse(null, { status: 401 })),
+      http.get(`${API}/series/admin`, () => new HttpResponse(null, { status: 401 })),
+      categoriesHandler(),
       http.post(`${API}/auth/refresh`, () => new HttpResponse(null, { status: 401 })),
     )
     const { router } = renderRoutes(routes, '/series')
@@ -386,7 +387,7 @@ describe('sécurité du mot de passe', { timeout: 15_000 }, () => {
         consoleCalls.push(args)
       }),
     )
-    server.use(loginHandler(), seriesHandler(0))
+    server.use(loginHandler(), ...seriesListHandlers(0))
     renderRoutes(routes, '/connexion')
     await screen.findByLabelText('Email')
 

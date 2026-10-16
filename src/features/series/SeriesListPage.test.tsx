@@ -4,7 +4,13 @@ import { http, HttpResponse } from 'msw'
 import { routes } from '@/app/routes'
 import { resetSessionForTests } from '@/shared/session/session'
 import { renderRoutes } from '@/test/render'
-import { API, makeSeries, seriesHandler, type SeriesRequest } from '@/test/seriesApi'
+import {
+  API,
+  categoriesHandler,
+  makeSeries,
+  seriesHandler,
+  type SeriesRequest,
+} from '@/test/seriesApi'
 import { server } from '@/test/server'
 import { signInForTests } from '@/test/session'
 
@@ -22,6 +28,8 @@ const scrollTo = vi.fn()
 
 beforeEach(() => {
   signInForTests()
+  // La page lit aussi les catégories pour son filtre (spec 0009).
+  server.use(categoriesHandler())
   scrollTo.mockClear()
   window.scrollTo = scrollTo
 })
@@ -41,7 +49,7 @@ describe('liste des séries (AC-8, AC-11)', { timeout: 15_000 }, () => {
     expect(document.title).toBe('Séries · Noli Admin')
     expect(bodyRows()).toHaveLength(20)
     expect(screen.getByText('1 à 20 sur 45')).toBeInTheDocument()
-    expect(requests[0]).toEqual({ page: '1', limit: '20' })
+    expect(requests[0]).toMatchObject({ page: '1', limit: '20', q: null, premium: null })
     const headers = screen.getAllByRole('columnheader').map((header) => header.textContent)
     expect(headers).toEqual([
       'Couverture et titre',
@@ -161,7 +169,7 @@ describe('page dans l’adresse (AC-9)', { timeout: 15_000 }, () => {
     expect(await screen.findByText('Série 21')).toBeInTheDocument()
     expect(currentPath(router)).toBe('/series?page=2')
     expect(router.state.historyAction).toBe('PUSH')
-    expect(requests.at(-1)).toEqual({ page: '2', limit: '20' })
+    expect(requests.at(-1)).toMatchObject({ page: '2', limit: '20' })
     expect(scrollTo).toHaveBeenCalledWith({ top: 0 })
     expect(screen.getByText('Page 2 sur 3')).toHaveAttribute('aria-live', 'polite')
   })
@@ -237,9 +245,9 @@ describe('états (AC-10)', { timeout: 15_000 }, () => {
   it('affiche l’erreur puis recharge avec « Réessayer »', async () => {
     const attempts = { count: 0 }
     server.use(
-      http.get(`${API}/series`, () => {
+      http.get(`${API}/series/admin`, () => {
         attempts.count += 1
-        return HttpResponse.json({ message: 'Bad' }, { status: 400 })
+        return HttpResponse.json({ message: 'Bad' }, { status: 409 })
       }),
     )
     renderRoutes(routes, '/series')
@@ -257,9 +265,9 @@ describe('états (AC-10)', { timeout: 15_000 }, () => {
     const release: { resolve?: () => void } = {}
     const attempts = { count: 0 }
     server.use(
-      http.get(`${API}/series`, async () => {
+      http.get(`${API}/series/admin`, async () => {
         attempts.count += 1
-        if (attempts.count === 1) return HttpResponse.json({ message: 'Bad' }, { status: 400 })
+        if (attempts.count === 1) return HttpResponse.json({ message: 'Bad' }, { status: 409 })
         await new Promise<void>((resolve) => {
           release.resolve = resolve
         })
@@ -284,10 +292,10 @@ describe('états (AC-10)', { timeout: 15_000 }, () => {
   it('affiche la nouvelle erreur quand « Réessayer » échoue encore', async () => {
     const attempts = { count: 0 }
     server.use(
-      http.get(`${API}/series`, () => {
+      http.get(`${API}/series/admin`, () => {
         attempts.count += 1
         return attempts.count === 1
-          ? HttpResponse.json({ message: 'Bad' }, { status: 400 })
+          ? HttpResponse.json({ message: 'Bad' }, { status: 409 })
           : HttpResponse.json({ message: 'Introuvable' }, { status: 404 })
       }),
     )
@@ -305,9 +313,9 @@ describe('états (AC-10)', { timeout: 15_000 }, () => {
     const release: { resolve?: () => void } = {}
     const attempts = { count: 0 }
     server.use(
-      http.get(`${API}/series`, async ({ request }) => {
+      http.get(`${API}/series/admin`, async ({ request }) => {
         attempts.count += 1
-        if (attempts.count === 1) return HttpResponse.json({ message: 'Bad' }, { status: 400 })
+        if (attempts.count === 1) return HttpResponse.json({ message: 'Bad' }, { status: 409 })
         const page = Number(new URL(request.url).searchParams.get('page'))
         if (page === 2) {
           await new Promise<void>((resolve) => {
@@ -343,7 +351,7 @@ describe('états (AC-10)', { timeout: 15_000 }, () => {
   it('n’appelle l’API qu’une fois sur une erreur 4xx (pas de réessai)', async () => {
     const attempts = { count: 0 }
     server.use(
-      http.get(`${API}/series`, () => {
+      http.get(`${API}/series/admin`, () => {
         attempts.count += 1
         return HttpResponse.json({ message: 'Not found' }, { status: 404 })
       }),
@@ -357,7 +365,7 @@ describe('états (AC-10)', { timeout: 15_000 }, () => {
   it('garde les lignes précédentes grisées pendant le changement de page', async () => {
     const release: { resolve?: () => void } = {}
     server.use(
-      http.get(`${API}/series`, async ({ request }) => {
+      http.get(`${API}/series/admin`, async ({ request }) => {
         const page = new URL(request.url).searchParams.get('page')
         if (page === '2') {
           await new Promise<void>((resolve) => {
