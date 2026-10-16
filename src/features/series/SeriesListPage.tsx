@@ -12,7 +12,7 @@ import {
   type SeriesFilters,
 } from '@/features/series/filters'
 import { lastPage, parsePage, SERIES_PAGE_SIZE } from '@/features/series/page'
-import type { SeriesSummary } from '@/features/series/schemas'
+import type { SeriesListRow } from '@/features/series/schemas'
 import {
   AccessCell,
   CategoriesCell,
@@ -30,11 +30,17 @@ import { PageHeader } from '@/shared/ui/PageHeader'
 
 // Liste paginée et filtrée des séries (specs 0004 et 0009). Page et filtres vivent dans l'adresse.
 
-const columns: readonly DataTableColumn<SeriesSummary>[] = [
+// Le compte « N vidéos à traiter » ne s'affiche qu'avec ce filtre actif (spec 0010, AC-5).
+const makeColumns = (showVideos: boolean): readonly DataTableColumn<SeriesListRow>[] => [
   {
     key: 'title',
     header: 'Couverture et titre',
-    render: (series) => <TitleCell series={series} />,
+    render: (series) => (
+      <TitleCell
+        series={series}
+        videosToProcess={showVideos ? series.videosToProcess : undefined}
+      />
+    ),
     width: '32%',
   },
   {
@@ -59,7 +65,10 @@ const columns: readonly DataTableColumn<SeriesSummary>[] = [
   },
 ]
 
-function getRowKey(series: SeriesSummary): string {
+const columnsWithoutVideos = makeColumns(false)
+const columnsWithVideos = makeColumns(true)
+
+function getRowKey(series: SeriesListRow): string {
   return series._id
 }
 
@@ -187,7 +196,7 @@ export function SeriesListPage() {
         {shownError === undefined || shownError === null ? (
           <DataTable
             caption="Liste des séries"
-            columns={columns}
+            columns={filters.videos === undefined ? columnsWithoutVideos : columnsWithVideos}
             rows={emptyBeyondEnd ? undefined : data?.data.series}
             getRowKey={getRowKey}
             // Pendant le recadrage, la page s'en charge : le total nul évite celui de DataTable.

@@ -1,4 +1,4 @@
-// Barre de filtres de la liste des séries (spec 0009, AC-1 à AC-4, AC-6, AC-8, AC-10).
+// Barre de filtres de la liste des séries (spec 0009, AC-1 à AC-4, AC-6, AC-8, AC-10 ; spec 0010, AC-4).
 // La saisie de la recherche est locale ; l'adresse, tenue par la page, reste la seule source des
 // filtres actifs. La barre décrit chaque changement ; la page écrit l'adresse.
 import {
@@ -19,8 +19,10 @@ import {
   normalizeSearch,
   SEARCH_MAX_LENGTH,
   searchValue,
+  hasFilters,
   type SeriesAccess,
   type SeriesFilters,
+  type SeriesVideos,
 } from '@/features/series/filters'
 import type { Category } from '@/shared/api/categories'
 
@@ -51,6 +53,17 @@ function toAccess(value: string): SeriesAccess | undefined {
   return value === 'premium' || value === 'gratuites' ? value : undefined
 }
 
+// Filtre « Vidéos » (spec 0010, AC-4).
+const VIDEOS_ALL = 'toutes'
+const VIDEOS_OPTIONS = [
+  { label: 'Toutes', value: VIDEOS_ALL },
+  { label: 'À traiter', value: 'a-traiter' },
+]
+
+function toVideos(value: string): SeriesVideos | undefined {
+  return value === 'a-traiter' ? value : undefined
+}
+
 function categoryLabel(category: Category): string {
   return category.isVisible ? category.name : `${category.name} (masquée)`
 }
@@ -65,6 +78,7 @@ export function SeriesFiltersBar({
   searchRef,
 }: SeriesFiltersBarProps) {
   const accessLabelId = useId()
+  const videosLabelId = useId()
   const urlQuery = filters.q ?? ''
 
   const [text, setText] = useState(urlQuery)
@@ -112,8 +126,7 @@ export function SeriesFiltersBar({
     value: category._id,
     label: categoryLabel(category),
   }))
-  const active =
-    filters.q !== undefined || filters.categoryId !== undefined || filters.access !== undefined
+  const active = hasFilters(filters)
 
   return (
     <Box role="search" aria-label="Filtres des séries" mb="md">
@@ -165,6 +178,18 @@ export function SeriesFiltersBar({
             value={filters.access ?? ACCESS_ALL}
             onChange={(value) => {
               onChange(withPendingSearch({ ...filters, access: toAccess(value) }), 'push')
+            }}
+          />
+        </Stack>
+        <Stack gap={4} role="group" aria-labelledby={videosLabelId}>
+          <Text id={videosLabelId} size="sm" fw={500}>
+            Vidéos
+          </Text>
+          <SegmentedControl
+            data={VIDEOS_OPTIONS}
+            value={filters.videos ?? VIDEOS_ALL}
+            onChange={(value) => {
+              onChange(withPendingSearch({ ...filters, videos: toVideos(value) }), 'push')
             }}
           />
         </Stack>

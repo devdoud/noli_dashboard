@@ -96,8 +96,8 @@ describe('recherche et filtres (spec 0009)', { timeout: 20_000 }, () => {
     const bar = screen.getByRole('search', { name: 'Filtres des séries' })
     expect(within(bar).getByRole('textbox', { name: 'Rechercher un titre' })).toBeInTheDocument()
     expect(categoryInput()).toHaveAccessibleName('Catégorie')
-    expect(within(bar).getByRole('group', { name: 'Accès' })).toBeInTheDocument()
-    expect(within(bar).getByRole('radio', { name: 'Toutes' })).toBeChecked()
+    const access = within(bar).getByRole('group', { name: 'Accès' })
+    expect(within(access).getByRole('radio', { name: 'Toutes' })).toBeChecked()
     expect(within(bar).queryByRole('button', { name: 'Effacer les filtres' })).toBeNull()
   })
 
@@ -286,7 +286,8 @@ describe('recherche et filtres (spec 0009)', { timeout: 20_000 }, () => {
     expect(searchInput()).toHaveFocus()
     expect(searchInput()).toHaveValue('')
     expect(await screen.findByText('La Lagune')).toBeInTheDocument()
-    expect(screen.getByRole('radio', { name: 'Toutes' })).toBeChecked()
+    const access = screen.getByRole('group', { name: 'Accès' })
+    expect(within(access).getByRole('radio', { name: 'Toutes' })).toBeChecked()
     expect(screen.queryByText(/trouvée/)).toBeNull()
   })
 
@@ -484,5 +485,78 @@ describe('recherche et filtres (spec 0009)', { timeout: 20_000 }, () => {
     expect(await screen.findByText('2 séries trouvées')).toBeInTheDocument()
     expect(categoryInput()).toBeEnabled()
     expect(categoryInput()).toHaveValue('Bientôt (masquée)')
+  })
+})
+
+describe('filtre « Vidéos » (spec 0010)', { timeout: 20_000 }, () => {
+  // Les séries 2 et 4 ont des vidéos à traiter.
+  const TODO = [0, 3, 0, 1, 0]
+  function todoCatalog(requests?: SeriesRequest[]) {
+    return seriesHandler(CATALOG.length, {
+      requests,
+      items: (index) => {
+        const base = CATALOG[index - 1] ?? makeSeries(index)
+        return { ...base, videosToProcess: TODO[index - 1] ?? 0 }
+      },
+    })
+  }
+
+  it('« À traiter » filtre, se combine, s’écrit dans l’adresse et montre le compte (AC-4, AC-5)', async () => {
+    const requests: SeriesRequest[] = []
+    server.use(categoriesOk(), todoCatalog(requests))
+    const { router } = renderRoutes(routes, '/series?acces=gratuites')
+    await screen.findByText('La Lagune')
+    expect(screen.queryByText(/vidéos? à traiter/)).toBeNull()
+
+    const videos = screen.getByRole('group', { name: 'Vidéos' })
+    expect(within(videos).getByRole('radio', { name: 'Toutes' })).toBeChecked()
+    await userEvent.click(within(videos).getByRole('radio', { name: 'À traiter' }))
+
+    await waitFor(() => {
+      expect(currentPath(router)).toBe('/series?acces=gratuites&videos=a-traiter')
+    })
+    expect(router.state.historyAction).toBe('PUSH')
+    expect(await screen.findByText('2 séries trouvées')).toBeInTheDocument()
+    expect(bodyRows()).toHaveLength(2)
+    expect(screen.getByText('3 vidéos à traiter')).toBeInTheDocument()
+    expect(screen.getByText('1 vidéo à traiter')).toBeInTheDocument()
+    expect(requests.at(-1)).toMatchObject({ premium: 'false', video: 'todo', page: '1' })
+  })
+
+  it('« Effacer les filtres » retire aussi les vidéos, et le compte disparaît (AC-4, AC-5)', async () => {
+    server.use(categoriesOk(), todoCatalog())
+    const { router } = renderRoutes(routes, '/series?videos=a-traiter')
+    expect(await screen.findByText('3 vidéos à traiter')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Effacer les filtres' }))
+
+    await waitFor(() => {
+      expect(currentPath(router)).toBe('/series')
+    })
+    expect(await screen.findByText('La Lagune')).toBeInTheDocument()
+    expect(screen.queryByText(/vidéos? à traiter/)).toBeNull()
+    const videos = screen.getByRole('group', { name: 'Vidéos' })
+    expect(within(videos).getByRole('radio', { name: 'Toutes' })).toBeChecked()
+  })
+
+  it('retire une valeur inconnue de l’adresse sans nouvelle entrée (AC-4)', async () => {
+    const requests: SeriesRequest[] = []
+    server.use(categoriesOk(), todoCatalog(requests))
+    const { router } = renderRoutes(routes, '/series?videos=toutes')
+
+    await waitFor(() => {
+      expect(currentPath(router)).toBe('/series')
+    })
+    expect(router.state.historyAction).toBe('REPLACE')
+    expect(await screen.findByText('La Lagune')).toBeInTheDocument()
+    expect(requests.every((r) => r.video === null)).toBe(true)
+  })
+
+  it('aucun résultat : le message des filtres et « Effacer les filtres » (AC-4)', async () => {
+    server.use(categoriesOk(), todoCatalog())
+    renderRoutes(routes, '/series?q=lagune&videos=a-traiter')
+
+    expect(await screen.findByText('Aucune série ne correspond à ces filtres.')).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Effacer les filtres' }).length).toBeGreaterThan(0)
   })
 })

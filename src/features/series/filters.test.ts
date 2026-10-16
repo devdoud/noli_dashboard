@@ -6,6 +6,7 @@ import {
   resultCountText,
   searchValue,
   toApiQuery,
+  videosToProcessText,
   withFilters,
 } from '@/features/series/filters'
 
@@ -80,5 +81,34 @@ describe('filtres de la liste (spec 0009)', () => {
     expect(resultCountText(0)).toBe('0 série trouvée')
     expect(resultCountText(1)).toBe('1 série trouvée')
     expect(resultCountText(3)).toBe('3 séries trouvées')
+  })
+})
+
+describe('filtre « Vidéos » (spec 0010)', () => {
+  it('lit « videos=a-traiter » et ignore toute autre valeur (AC-4)', () => {
+    expect(parseFilters(new URLSearchParams('videos=a-traiter'))).toEqual({ videos: 'a-traiter' })
+    expect(parseFilters(new URLSearchParams('videos=toutes'))).toEqual({})
+    expect(parseFilters(new URLSearchParams('videos='))).toEqual({})
+  })
+
+  it('écrit videos après acces et avant page, et relit sans perte (AC-4)', () => {
+    const filters = { q: 'me', categoryId: CAT, access: 'premium', videos: 'a-traiter' } as const
+    expect(withFilters(filters, 2).toString()).toBe(
+      `q=me&categorie=${CAT}&acces=premium&videos=a-traiter&page=2`,
+    )
+    expect(parseFilters(withFilters(filters, 2))).toEqual(filters)
+    expect(Object.keys(makeFilters({ videos: 'a-traiter', q: 'me' }))).toEqual(['q', 'videos'])
+  })
+
+  it('compte comme un filtre actif et demande video=todo à l’API (AC-4)', () => {
+    expect(hasFilters({ videos: 'a-traiter' })).toBe(true)
+    expect(toApiQuery({ videos: 'a-traiter' }, 1)).toEqual({ page: 1, limit: 20, video: 'todo' })
+    expect('video' in toApiQuery({}, 1)).toBe(false)
+  })
+
+  it('écrit le compte d’une ligne au singulier à 0 et 1 (AC-5)', () => {
+    expect(videosToProcessText(3)).toBe('3 vidéos à traiter')
+    expect(videosToProcessText(1)).toBe('1 vidéo à traiter')
+    expect(videosToProcessText(0)).toBe('0 vidéo à traiter')
   })
 })

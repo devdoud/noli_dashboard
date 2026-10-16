@@ -21,7 +21,7 @@ _Ce sont des recommandations pour garder une construction ordonnée, pas des obl
 | 8 | Images | Slice 4 | done |
 | 9 | Catégories | Slice 5 | done |
 | 10 | Recherche et filtres | Slice 6 | done |
-| 11 | Vue d'ensemble | Slice 7 | planned |
+| 11 | Vue d'ensemble | Slice 7 | in-progress |
 | 12 | Notification de test | Slice 8 | planned |
 
 ## Foundations
@@ -161,10 +161,19 @@ Spec [0009](../specs/0009-recherche-filtres/index.md) · Code `src/features/seri
 
 ## Slice 7: Vue d'ensemble
 
-### 11. Vue d'ensemble · needs a decision
+### 11. Vue d'ensemble · in-progress
 Une page d'accueil avec quelques chiffres utiles pour repérer le travail à faire.
 **Done when:** la page d'accueil montre le nombre de séries, d'épisodes et d'épisodes sans vidéo prête, chacun menant à la liste concernée.
-- [ ] Design it (spec): `/architect vue d'ensemble`
+- [x] Design it (spec): `/architect vue d'ensemble`
+- [ ] Build it: `/develop vue d'ensemble`
+   - [x] Prérequis backend : route admin `GET /series/admin/stats`, filtre `video=todo` et compte `videosToProcess` sur `GET /series/admin`, test de parité avec `adminVideoStatus`, essai sur l'API locale `noli_dev` (AC-10)
+   - [x] Accueil de bout en bout : fonctionnalité `overview`, trois tuiles avec nombres, détail par état, liens et « Tout est prêt », retrait des cartes provisoires (AC-1 à AC-3, AC-9)
+   - [x] Filtre « Vidéos » dans la liste des séries et compte « N vidéos à traiter » par ligne (AC-4, AC-5)
+   - [x] Fraîcheur, chargement et erreur, accessibilité, écran étroit (AC-6 à AC-8)
+   - [ ] Mise en ligne de l'API puis du dashboard, contrôle en production en lecture seule (AC-11)
+- [ ] Verify it: `/check verify vue d'ensemble`
+- [ ] Test it: `/test vue d'ensemble`
+Spec [0010](../specs/0010-vue-ensemble/index.md) · Code `src/features/overview/`, `src/features/series/` (filtre), backend `noli-backend/src/series/` (stats)
 
 ## Slice 8: Notification de test
 
@@ -188,6 +197,8 @@ Hors de ce passage, gardé pour que le plan reste honnête.
 - **Recherche publique de l'app sûre**: `GET /series/search` applique encore le texte saisi comme expression régulière non échappée, à corriger côté backend · from spec 0009
 - **Index pour la recherche par titre**: champ de titre normalisé ou index texte, si le catalogue dépasse quelques milliers de séries · from spec 0009
 - **Tri au choix de la liste des séries**: titre, note, mise à jour, sur la route admin · from spec 0009
+- **Liste des épisodes à traiter**: série, saison, numéro, état, si filtrer par série ne suffit plus · from spec 0010
+- **Mesurer les stats sur un gros catalogue**: durée de l'agrégation avant tout cache ou compteur, au delà de quelques milliers de séries · from spec 0010
 
 ## Legend
 
