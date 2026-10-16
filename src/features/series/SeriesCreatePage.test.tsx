@@ -84,9 +84,10 @@ describe('liste vers création et fiche (AC-1)', { timeout: 45_000 }, () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Série 1' })).toBeInTheDocument()
     expect(router.state.location.pathname).toBe('/series/aaaaaaaaaaaaaaaaaaaaaaa1')
+    // La liste retire le « page=1 » superflu de son adresse (spec 0009, AC-5) avant le clic.
     expect(screen.getByRole('link', { name: 'Retour aux séries' })).toHaveAttribute(
       'href',
-      '/series?page=1',
+      '/series',
     )
   })
 })

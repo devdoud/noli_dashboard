@@ -1,4 +1,4 @@
-// Réponse de GET /series (spec 0004, « Schéma de réponse »). Schéma tolérant : un champ
+// Réponse de GET /series/admin (specs 0004 et 0009, « Schéma de réponse »). Schéma tolérant : un champ
 // d'affichage absent ou null ne fait pas échouer toute la page.
 import { z } from 'zod'
 import type { Category } from '@/shared/api/categories'
@@ -14,8 +14,9 @@ export const seriesSummarySchema = z.object({
   _id: z.string(),
   title: z.string(),
   coverImage: z.string().nullish(),
+  // La route admin (spec 0009) donne aussi les catégories masquées, avec isVisible ; absent = visible.
   categories: z
-    .array(z.object({ _id: z.string(), name: z.string() }))
+    .array(z.object({ _id: z.string(), name: z.string(), isVisible: z.boolean().optional() }))
     .nullish()
     .transform((value) => value ?? []),
   // 'ongoing' | 'completed' attendus ; toute autre valeur s'affiche « — ».

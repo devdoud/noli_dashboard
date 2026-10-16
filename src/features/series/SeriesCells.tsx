@@ -89,9 +89,24 @@ export function TitleCell({ series }: { readonly series: SeriesSummary }) {
   )
 }
 
+// Les catégories masquées figurent aussi, suivies de « (masquée) » en texte secondaire (spec 0009, AC-9).
 export function CategoriesCell({ series }: { readonly series: SeriesSummary }) {
-  const names = series.categories.map((category) => category.name)
-  return <Text size="sm">{names.length === 0 ? MISSING_VALUE : names.join(', ')}</Text>
+  if (series.categories.length === 0) return <Text size="sm">{MISSING_VALUE}</Text>
+  return (
+    <Text size="sm">
+      {series.categories.map((category, index) => (
+        <span key={category._id}>
+          {index === 0 ? null : ', '}
+          {category.name}
+          {category.isVisible === false ? (
+            <Text span size="sm" c="dimmed">
+              {' (masquée)'}
+            </Text>
+          ) : null}
+        </span>
+      ))}
+    </Text>
+  )
 }
 
 export function StatusCell({ series }: { readonly series: SeriesSummary }) {
