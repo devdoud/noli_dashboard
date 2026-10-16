@@ -21,7 +21,7 @@ Essais réels sur l'API locale branchée sur la base `noli_dev` (compte `demo.ad
 - [x] Faire échouer `/categories/all` (outils du navigateur, blocage de la requête) → « Catégorie » désactivé avec « Catégories indisponibles », recherche et accès marchent → AC-8
 - [ ] Au clavier seul : Tab jusqu'à chaque filtre, flèches dans « Accès », recherche dans « Catégorie », focus visible partout ; un lecteur d'écran annonce « N séries trouvées » après chaque filtre → AC-10
 - [x] Largeur 375 px → filtres empilés, pas de défilement horizontal de la page → AC-1
-- [ ] Production (lecture seule, après mise en ligne de l'API puis du dashboard) : une recherche, un filtre de catégorie, un filtre d'accès sur https://admin.nollli.com → AC-12
+- [x] Production (lecture seule, après mise en ligne de l'API puis du dashboard) : une recherche, un filtre de catégorie, un filtre d'accès sur https://admin.nollli.com → AC-12
 
 ## Commands
 - [x] `GET /series/admin` sans jeton → `401` ; jeton d'un non admin → `403` → AC-11
