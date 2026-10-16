@@ -155,7 +155,7 @@ Retrouver vite une série dans la liste, par titre, catégorie ou accès premium
    - [x] Filtres catégorie et accès, compte, « Effacer les filtres », aucun résultat, catégories masquées dans les lignes (AC-1, AC-6, AC-7, AC-9)
    - [x] Adresse invalide, erreurs, accessibilité, écran étroit (AC-5, AC-8, AC-10)
    - [ ] Mise en ligne de l'API puis du dashboard, contrôle en production en lecture seule (AC-11, AC-12)
-- [ ] Verify it: `/check verify recherche et filtres`
+- [x] Verify it: `/check verify recherche et filtres`
 - [ ] Test it: `/test recherche et filtres`
 Spec [0009](../specs/0009-recherche-filtres/index.md) · Code `src/features/series/` (filtres), backend `noli-backend/src/series/` (route admin)
 
