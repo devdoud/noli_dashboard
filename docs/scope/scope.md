@@ -166,10 +166,10 @@ Une page d'accueil avec quelques chiffres utiles pour repérer le travail à fai
 **Done when:** la page d'accueil montre le nombre de séries, d'épisodes et d'épisodes sans vidéo prête, chacun menant à la liste concernée.
 - [x] Design it (spec): `/architect vue d'ensemble`
 - [ ] Build it: `/develop vue d'ensemble`
-   - [ ] Prérequis backend : route admin `GET /series/admin/stats`, filtre `video=todo` et compte `videosToProcess` sur `GET /series/admin`, test de parité avec `adminVideoStatus`, essai sur l'API locale `noli_dev` (AC-10)
-   - [ ] Accueil de bout en bout : fonctionnalité `overview`, trois tuiles avec nombres, détail par état, liens et « Tout est prêt », retrait des cartes provisoires (AC-1 à AC-3, AC-9)
-   - [ ] Filtre « Vidéos » dans la liste des séries et compte « N vidéos à traiter » par ligne (AC-4, AC-5)
-   - [ ] Fraîcheur, chargement et erreur, accessibilité, écran étroit (AC-6 à AC-8)
+   - [x] Prérequis backend : route admin `GET /series/admin/stats`, filtre `video=todo` et compte `videosToProcess` sur `GET /series/admin`, test de parité avec `adminVideoStatus`, essai sur l'API locale `noli_dev` (AC-10)
+   - [x] Accueil de bout en bout : fonctionnalité `overview`, trois tuiles avec nombres, détail par état, liens et « Tout est prêt », retrait des cartes provisoires (AC-1 à AC-3, AC-9)
+   - [x] Filtre « Vidéos » dans la liste des séries et compte « N vidéos à traiter » par ligne (AC-4, AC-5)
+   - [x] Fraîcheur, chargement et erreur, accessibilité, écran étroit (AC-6 à AC-8)
    - [ ] Mise en ligne de l'API puis du dashboard, contrôle en production en lecture seule (AC-11)
 - [ ] Verify it: `/check verify vue d'ensemble`
 - [ ] Test it: `/test vue d'ensemble`
