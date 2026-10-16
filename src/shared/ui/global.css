@@ -83,6 +83,15 @@
   border-color: var(--input-bd);
 }
 
+/*
+ * Focus d'un champ : Mantine retire le contour (`outline: none` sur :focus, plus spécifique que
+ * :focus-visible) et ne garde qu'une bordure en couleur principale, l'ambre 6 (2:1 sur blanc).
+ * La bordure prend la couleur de focus du projet, qui atteint 3:1 dans les deux modes.
+ */
+.mantine-Input-input {
+  --input-bd-focus: var(--noli-color-focus);
+}
+
 /* Anneau de focus : ambre en sombre, ambre foncé en clair (l'ambre 6 n'atteint pas 3:1 sur blanc). */
 .mantine-focus-auto:focus-visible,
 .mantine-focus-always:focus,
