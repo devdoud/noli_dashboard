@@ -11,7 +11,7 @@ Essais réels sur l'API locale lancée depuis la copie `../noli-backend-overview
 - [x] Sur `/series`, combiner « Vidéos : À traiter » avec une recherche et « Accès » → adresse `q`, `acces`, `videos` dans cet ordre, page 1, une entrée d'historique par choix, compte juste ; « Effacer les filtres » retire aussi `videos` et le compte des lignes → AC-4, AC-5
 - [x] Ouvrir `/series?videos=nimporte` → adresse `/series` sans nouvelle entrée, liste complète → AC-4
 - [x] Sans le filtre « À traiter », aucune ligne ne montre de compte de vidéos → AC-5
-- [ ] Faire passer une vidéo à « Prête » dans une fiche (sur `noli_dev`, ou en simulant la réponse), revenir à l'accueil → chiffres à jour sans recharger la page ; revenir sur l'onglet après l'avoir quitté → les chiffres sont redemandés → AC-6
+- [x] Faire passer une vidéo à « Prête » dans une fiche (sur `noli_dev`, ou en simulant la réponse), revenir à l'accueil → chiffres à jour sans recharger la page ; revenir sur l'onglet après l'avoir quitté → les chiffres sont redemandés → AC-6
 - [x] Ralentir le réseau (outils du navigateur) → trois squelettes pendant le chargement ; couper l'API → message d'erreur et « Réessayer », qui réaffiche les tuiles une fois l'API revenue → AC-7
 - [x] Au clavier seul : Tab atteint chaque tuile lien avec un focus visible sur toute la tuile ; un lecteur d'écran lit « 72 vidéos à traiter, voir les séries concernées » ; « Vidéos » se règle aux flèches → AC-8
 - [x] Largeur 375 px → tuiles sur une colonne, filtres empilés, pas de défilement horizontal → AC-1, AC-8
