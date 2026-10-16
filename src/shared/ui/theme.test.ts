@@ -1,5 +1,6 @@
 import { DEFAULT_THEME, mergeMantineTheme } from '@mantine/core'
 import { COLOR_SCHEME_STORAGE_KEY, cssVariablesResolver, theme } from '@/shared/ui/theme'
+import globalCss from '@/shared/ui/global.css?raw'
 
 // Contraste WCAG entre deux couleurs hexadécimales opaques.
 function luminance(hex: string): number {
@@ -98,5 +99,17 @@ describe('thème : contrastes des tokens (AC-4)', () => {
     expect(contrast(shade('noliAmber', 6), surfaces.light)).toBeLessThan(4.5)
     expect(light['--mantine-color-anchor']).not.toBe(shade('noliAmber', 6))
     expect(light['--mantine-primary-color-light-color']).toBe(shade('noliAmber', 9))
+  })
+})
+
+describe('focus des champs (WCAG AA, spec 0009 AC-10)', () => {
+  // Mantine remplace le contour par une bordure en couleur principale (ambre 6, 2:1 sur blanc) :
+  // les champs doivent prendre la couleur de focus du projet, testée à 3:1 plus haut.
+  it('donne aux champs la bordure de focus du projet', () => {
+    const rule = /\.mantine-Input-input\s*\{([^}]*)\}/g
+    const bodies = Array.from(globalCss.matchAll(rule), (match) => match[1] ?? '')
+    expect(bodies.some((body) => /--input-bd-focus:\s*var\(--noli-color-focus\)/.test(body))).toBe(
+      true,
+    )
   })
 })

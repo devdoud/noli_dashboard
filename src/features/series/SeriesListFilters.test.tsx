@@ -397,4 +397,92 @@ describe('recherche et filtres (spec 0009)', { timeout: 20_000 }, () => {
     })
     expect(router.state.location.state).toEqual({ from: '/series?q=secret&acces=premium' })
   })
+
+  it('la zone d’annonce existe dès l’ouverture, vide sans filtre (AC-10)', async () => {
+    server.use(categoriesOk(), catalog())
+    renderRoutes(routes, '/series')
+    await screen.findByText('La Lagune')
+
+    const bar = screen.getByRole('search', { name: 'Filtres des séries' })
+    const live = bar.querySelector('[aria-live="polite"]')
+    expect(live).not.toBeNull()
+    expect(live).toHaveTextContent('')
+    expect(screen.getByText('1 à 5 sur 5')).toBeInTheDocument()
+  })
+
+  it('« Effacer la recherche » n’apparaît qu’avec du texte, limité à 100 caractères (AC-1, AC-2)', async () => {
+    server.use(categoriesOk(), catalog())
+    renderRoutes(routes, '/series')
+    await screen.findByText('La Lagune')
+
+    expect(screen.queryByRole('button', { name: 'Effacer la recherche' })).toBeNull()
+    expect(searchInput()).toHaveAttribute('maxlength', '100')
+
+    await userEvent.type(searchInput(), 'a')
+
+    expect(screen.getByRole('button', { name: 'Effacer la recherche' })).toBeInTheDocument()
+  })
+
+  it('écrit la recherche nettoyée des espaces dans l’adresse (AC-2)', async () => {
+    const requests: SeriesRequest[] = []
+    server.use(categoriesOk(), catalog(requests))
+    const { router } = renderRoutes(routes, '/series')
+    await screen.findByText('La Lagune')
+
+    await userEvent.type(searchInput(), '  le   secret ')
+
+    await waitFor(() => {
+      expect(currentPath(router)).toBe('/series?q=le+secret')
+    })
+    expect(await screen.findByText('1 série trouvée')).toBeInTheDocument()
+    expect(requests.at(-1)).toMatchObject({ q: 'le secret' })
+    expect(searchInput()).toHaveValue('  le   secret ')
+  })
+
+  it('garde les lignes précédentes, grisées, pendant le chargement d’un filtre (AC-3)', async () => {
+    server.use(categoriesOk(), catalog())
+    renderRoutes(routes, '/series')
+    await screen.findByText('La Lagune')
+    server.use(
+      http.get(`${API}/series/admin`, async () => {
+        await delay(400)
+        return HttpResponse.json({
+          message: 'ok',
+          data: { total: 1, page: 1, limit: 20, series: [CATALOG[0]] },
+        })
+      }),
+    )
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Premium' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('table', { name: 'Liste des séries' })).toHaveAttribute(
+        'aria-busy',
+        'true',
+      )
+    })
+    expect(bodyRows()).toHaveLength(5)
+    expect(await screen.findByText('1 série trouvée')).toBeInTheDocument()
+    expect(bodyRows()).toHaveLength(1)
+  })
+
+  it('pendant le chargement des catégories, le filtre est désactivé et ne montre pas l’identifiant (AC-5)', async () => {
+    server.use(
+      http.get(`${API}/categories/all`, async () => {
+        await delay(400)
+        return HttpResponse.json({ message: 'ok', categories: CATEGORIES })
+      }),
+      catalog(),
+    )
+    renderRoutes(routes, `/series?categorie=${HIDDEN}`)
+    await screen.findByRole('search')
+
+    expect(categoryInput()).toBeDisabled()
+    expect(categoryInput()).toHaveValue('')
+    expect(categoryInput()).toHaveAttribute('placeholder', 'Chargement des catégories')
+
+    expect(await screen.findByText('2 séries trouvées')).toBeInTheDocument()
+    expect(categoryInput()).toBeEnabled()
+    expect(categoryInput()).toHaveValue('Bientôt (masquée)')
+  })
 })

@@ -1,7 +1,7 @@
 # 0009. Recherche et filtres de la liste des séries
 
 **Date**: 2026-10-16
-**Status**: In Progress
+**Status**: Accepted
 
 ## Summary
 
