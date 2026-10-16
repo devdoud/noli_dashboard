@@ -7,6 +7,7 @@ import { PARTIAL_DELETE_MESSAGE } from '@/features/series/DeleteSeriesModal'
 import { SERIES_GONE_MESSAGE, TITLE_TAKEN_MESSAGE } from '@/features/series/SeriesForm'
 import { MESSAGES } from '@/features/series/seriesFormSchema'
 import { resetSessionForTests } from '@/shared/session/session'
+import { statsHandler } from '@/test/overviewApi'
 import { renderRoutes } from '@/test/render'
 import {
   adminSeriesHandler,
@@ -35,7 +36,7 @@ function patchHandler(captured: Captured, respond?: (body: Record<string, unknow
 }
 
 function renderDetail(series = makeAdminSeries(), state?: unknown) {
-  server.use(adminSeriesHandler(series), categoriesHandler(), seriesHandler(12))
+  server.use(adminSeriesHandler(series), categoriesHandler(), seriesHandler(12), statsHandler())
   return renderRoutes(routes, { pathname: DETAIL_PATH, state })
 }
 

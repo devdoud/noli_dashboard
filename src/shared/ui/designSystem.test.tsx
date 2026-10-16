@@ -17,7 +17,9 @@ import { notifySuccess } from '@/shared/ui/notifySuccess'
 import { PageHeader } from '@/shared/ui/PageHeader'
 import { TableSkeleton } from '@/shared/ui/TableSkeleton'
 import { COLOR_SCHEME_STORAGE_KEY } from '@/shared/ui/theme'
+import { statsHandler } from '@/test/overviewApi'
 import { renderRoutes, renderWithProviders } from '@/test/render'
+import { server } from '@/test/server'
 import { signInForTests } from '@/test/session'
 
 interface Row {
@@ -176,9 +178,11 @@ describe('notifySuccess (AC-10)', () => {
 })
 
 describe('AppLayout (AC-5, AC-6, AC-7)', () => {
-  // Les pages sous AppLayout exigent une session depuis la spec 0004 (AC-5).
+  // Les pages sous AppLayout exigent une session depuis la spec 0004 (AC-5) ; l'accueil lit ses
+  // chiffres (spec 0010).
   beforeEach(() => {
     signInForTests()
+    server.use(statsHandler())
   })
 
   it('ne montre que les entrées prêtes et marque la page courante', async () => {

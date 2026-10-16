@@ -1,7 +1,7 @@
 # 0010. Vue d'ensemble : chiffres de l'accueil et vidéos à traiter
 
 **Date**: 2026-10-16
-**Status**: Proposed
+**Status**: In Progress
 
 ## Summary
 

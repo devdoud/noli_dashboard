@@ -1,12 +1,15 @@
 import { screen } from '@testing-library/react'
 import { routes } from '@/app/routes'
 import { resetSessionForTests } from '@/shared/session/session'
+import { statsHandler } from '@/test/overviewApi'
 import { renderRoutes } from '@/test/render'
+import { server } from '@/test/server'
 import { signInForTests } from '@/test/session'
 
 describe('coquille de l’application', () => {
   beforeEach(() => {
     signInForTests()
+    server.use(statsHandler())
   })
 
   afterEach(() => {
