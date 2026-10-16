@@ -1,12 +1,16 @@
-// Filtres de la liste des séries lus dans l'adresse (spec 0009, AC-4, AC-5). Fonctions pures.
+// Filtres de la liste des séries lus dans l'adresse (specs 0009 et 0010, AC-4, AC-5). Fonctions pures.
 import { SERIES_PAGE_SIZE } from '@/features/series/page'
 
 export type SeriesAccess = 'premium' | 'gratuites'
+
+/** Séries ayant au moins une vidéo d'épisode qui n'est pas « Prête » (spec 0010, AC-4). */
+export type SeriesVideos = 'a-traiter'
 
 export interface SeriesFilters {
   readonly q?: string
   readonly categoryId?: string
   readonly access?: SeriesAccess
+  readonly videos?: SeriesVideos
 }
 
 export const SEARCH_MIN_LENGTH = 2
@@ -32,12 +36,17 @@ function parseAccess(raw: string | null): SeriesAccess | undefined {
   return raw === 'premium' || raw === 'gratuites' ? raw : undefined
 }
 
+function parseVideos(raw: string | null): SeriesVideos | undefined {
+  return raw === 'a-traiter' ? raw : undefined
+}
+
 /** Filtres construits clé par clé, dans un ordre fixe et sans clé absente (clé de cache stable). */
 export function makeFilters(filters: SeriesFilters): SeriesFilters {
   return {
     ...(filters.q === undefined ? {} : { q: filters.q }),
     ...(filters.categoryId === undefined ? {} : { categoryId: filters.categoryId }),
     ...(filters.access === undefined ? {} : { access: filters.access }),
+    ...(filters.videos === undefined ? {} : { videos: filters.videos }),
   }
 }
 
@@ -48,21 +57,28 @@ export function parseFilters(params: URLSearchParams): SeriesFilters {
     q: searchValue(params.get('q')),
     categoryId: categoryId !== null && OBJECT_ID.test(categoryId) ? categoryId : undefined,
     access: parseAccess(params.get('acces')),
+    videos: parseVideos(params.get('videos')),
   })
 }
 
-/** Adresse de la liste, dans l'ordre q, categorie, acces, page (page omise si elle vaut 1). */
+/** Adresse de la liste, dans l'ordre q, categorie, acces, videos, page (page omise si elle vaut 1). */
 export function withFilters(filters: SeriesFilters, page: number): URLSearchParams {
   const params = new URLSearchParams()
   if (filters.q !== undefined) params.set('q', filters.q)
   if (filters.categoryId !== undefined) params.set('categorie', filters.categoryId)
   if (filters.access !== undefined) params.set('acces', filters.access)
+  if (filters.videos !== undefined) params.set('videos', filters.videos)
   if (page > 1) params.set('page', String(page))
   return params
 }
 
 export function hasFilters(filters: SeriesFilters): boolean {
-  return filters.q !== undefined || filters.categoryId !== undefined || filters.access !== undefined
+  return (
+    filters.q !== undefined ||
+    filters.categoryId !== undefined ||
+    filters.access !== undefined ||
+    filters.videos !== undefined
+  )
 }
 
 export interface SeriesApiQuery {
@@ -71,6 +87,7 @@ export interface SeriesApiQuery {
   readonly q?: string
   readonly categoryId?: string
   readonly premium?: 'true' | 'false'
+  readonly video?: 'todo'
 }
 
 /** Paramètres de GET /series/admin. */
@@ -83,7 +100,13 @@ export function toApiQuery(filters: SeriesFilters, page: number): SeriesApiQuery
     ...(filters.access === undefined
       ? {}
       : { premium: filters.access === 'premium' ? 'true' : 'false' }),
+    ...(filters.videos === undefined ? {} : { video: 'todo' }),
   }
+}
+
+/** « 1 vidéo à traiter », « 3 vidéos à traiter » (spec 0010, AC-5). */
+export function videosToProcessText(count: number): string {
+  return count > 1 ? `${String(count)} vidéos à traiter` : `${String(count)} vidéo à traiter`
 }
 
 export function resultCountText(total: number): string {

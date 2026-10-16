@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw'
 import { API } from '@/test/apiBase'
 import { categoriesHandler } from '@/test/categoriesApi'
 
-// Réponses simulées de GET /series/admin pour les tests (specs 0004 et 0009).
+// Réponses simulées de GET /series/admin pour les tests (specs 0004, 0009 et 0010).
 
 export { API } from '@/test/apiBase'
 export { ALL_CATEGORIES, categoriesHandler } from '@/test/categoriesApi'
@@ -36,9 +36,14 @@ export interface SeriesRequest {
   readonly q: string | null
   readonly categoryId: string | null
   readonly premium: string | null
+  readonly video: string | null
 }
 
 const fold = (text: string) => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+
+function toProcess(series: RawSeries): number {
+  return typeof series.videosToProcess === 'number' ? series.videosToProcess : 0
+}
 
 function hasCategory(series: RawSeries, id: string): boolean {
   const categories = series.categories
@@ -46,8 +51,10 @@ function hasCategory(series: RawSeries, id: string): boolean {
 }
 
 /**
- * Catalogue de `total` séries, filtré et découpé comme la route admin (spec 0009) : titre
- * contient, sans accents ni majuscules ; catégorie ; accès. Une page au delà de la fin est vide.
+ * Catalogue de `total` séries, filtré et découpé comme la route admin (specs 0009 et 0010) :
+ * titre contient, sans accents ni majuscules ; catégorie ; accès ; vidéos à traiter
+ * (`video=todo`, d'après le `videosToProcess` de chaque série, renvoyé seulement avec ce filtre).
+ * Une page au delà de la fin est vide.
  */
 export function seriesHandler(
   total: number,
@@ -65,22 +72,31 @@ export function seriesHandler(
       q: params.get('q'),
       categoryId: params.get('categoryId'),
       premium: params.get('premium'),
+      video: params.get('video'),
     })
     const page = Number(params.get('page') ?? '1')
     const limit = Number(params.get('limit') ?? '20')
     const q = params.get('q')
     const categoryId = params.get('categoryId')
     const premium = params.get('premium')
+    const todo = params.get('video') === 'todo'
     const matching = Array.from({ length: total }, (_, offset) =>
       (options.items ?? makeSeries)(offset + 1),
     ).filter(
       (series) =>
         (q === null || fold(series.title).includes(fold(q))) &&
         (categoryId === null || hasCategory(series, categoryId)) &&
-        (premium === null || (series.isPremium === true) === (premium === 'true')),
+        (premium === null || (series.isPremium === true) === (premium === 'true')) &&
+        (!todo || toProcess(series) > 0),
     )
     const start = (page - 1) * limit
-    const series = matching.slice(start, start + limit)
+    const series = matching.slice(start, start + limit).map((item) => {
+      // Comme la route : le compte n'est renvoyé qu'avec le filtre.
+      const rest = Object.fromEntries(
+        Object.entries(item).filter(([key]) => key !== 'videosToProcess'),
+      )
+      return todo ? { ...rest, videosToProcess: toProcess(item) } : rest
+    })
     return HttpResponse.json({
       message: 'ok',
       data: { total: matching.length, page, limit, series },

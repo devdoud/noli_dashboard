@@ -35,16 +35,23 @@ export const seriesSummarySchema = z.object({
   updatedAt: z.string().nullish(),
 })
 
+// Ligne de la liste (spec 0010) : avec le filtre « Vidéos à traiter », la route ajoute le compte.
+// Facultatif, pour qu'une API pas encore à jour ne casse pas la liste.
+export const seriesListRowSchema = seriesSummarySchema.extend({
+  videosToProcess: z.number().int().nonnegative().optional(),
+})
+
 export const seriesPageSchema = z.object({
   data: z.object({
     total: z.number().int().min(0),
     page: z.number().int(),
     limit: z.number().int(),
-    series: z.array(seriesSummarySchema),
+    series: z.array(seriesListRowSchema),
   }),
 })
 
 export type SeriesSummary = z.infer<typeof seriesSummarySchema>
+export type SeriesListRow = z.infer<typeof seriesListRowSchema>
 export type SeriesPage = z.infer<typeof seriesPageSchema>
 
 // Épisode dans la réponse admin (spec 0006, « Données ») : tolérant, la vidéo décrite par son état.

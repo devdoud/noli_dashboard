@@ -3,6 +3,7 @@ import { Anchor, Badge, Box, Group, Image, Text } from '@mantine/core'
 import { IconPhoto } from '@tabler/icons-react'
 import { useState, type CSSProperties } from 'react'
 import { Link, useLocation } from 'react-router'
+import { videosToProcessText } from '@/features/series/filters'
 import { seriesPath } from '@/features/series/navigation'
 import type { SeriesSummary } from '@/features/series/schemas'
 import { formatRating, freeEpisodesLabel, statusLabel } from '@/features/series/seriesFormat'
@@ -70,21 +71,34 @@ export function CoverThumbnail({
   )
 }
 
-export function TitleCell({ series }: { readonly series: SeriesSummary }) {
+interface TitleCellProps {
+  readonly series: SeriesSummary
+  /** Compte affiché sous le titre avec le filtre « Vidéos à traiter » (spec 0010, AC-5). */
+  readonly videosToProcess?: number | undefined
+}
+
+export function TitleCell({ series, videosToProcess }: TitleCellProps) {
   const { pathname, search } = useLocation()
   // Un seul lien par ligne, sur le titre ; la fiche sait revenir à cette page (spec 0005, AC-1).
   return (
     <Group gap="sm" wrap="nowrap">
       <CoverThumbnail src={series.coverImage} />
-      <Anchor
-        component={Link}
-        to={seriesPath(series._id)}
-        state={{ from: pathname + search }}
-        fw={600}
-        size="sm"
-      >
-        {series.title}
-      </Anchor>
+      <Box>
+        <Anchor
+          component={Link}
+          to={seriesPath(series._id)}
+          state={{ from: pathname + search }}
+          fw={600}
+          size="sm"
+        >
+          {series.title}
+        </Anchor>
+        {videosToProcess === undefined ? null : (
+          <Text size="xs" c="dimmed">
+            {videosToProcessText(videosToProcess)}
+          </Text>
+        )}
+      </Box>
     </Group>
   )
 }
